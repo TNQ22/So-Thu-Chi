@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- SEO & Social Meta -->
+  <title>Sổ Thu Chi - Quản Lý Chi Tiêu & Sổ Vay Nợ (Offline-First)</title>
+  <meta name="description" content="Ứng dụng PWA quản lý thu chi cá nhân, ngân sách và theo dõi vay nợ offline-first, đồng bộ Google Drive không cần server riêng.">
+  <meta name="keywords" content="sổ thu chi, quản lý chi tiêu, quản lý vay nợ, pwa, offline-first, google drive sync, ngân sách">
+  <meta name="author" content="Sổ Thu Chi App">
+  
+  <!-- PWA & Mobile Capabilities -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0a0f1d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sổ Thu Chi">
+  
+  <!-- App Icons -->
+  <link rel="icon" type="image/svg+xml" href="./assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="./css/style.css">
+
+  <!-- Google Identity Services (GIS) for Google Drive Auth -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <div id="app-container">
+    <!-- Desktop Sidebar -->
+    <aside class="app-sidebar">
+      <div class="brand-section">
+        <img src="./assets/icons/icon.svg" alt="Logo Sổ Thu Chi" class="brand-logo">
+        <div class="brand-info">
+          <h1>Sổ Thu Chi</h1>
+          <span class="brand-badge">Offline-First</span>
+        </div>
+      </div>
+
+      <ul class="nav-links">
+        <li class="nav-item active">
+          <a href="#" data-view="dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Tổng Quan</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-view="transactions">
+            <i data-lucide="receipt"></i>
+            <span>Sổ Giao Dịch</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-view="debts">
+            <i data-lucide="handshake"></i>
+            <span>Sổ Vay Nợ</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-view="accounts">
+            <i data-lucide="wallet"></i>
+            <span>Tài Khoản & Ví</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-view="budgets">
+            <i data-lucide="piggy-bank"></i>
+            <span>Ngân Sách</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-view="analytics">
+            <i data-lucide="pie-chart"></i>
+            <span>Báo Cáo & Biểu Đồ</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" data-view="settings">
+            <i data-lucide="settings"></i>
+            <span>Cài Đặt & Drive</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="sync-status-indicator" onclick="window.app.switchView('settings')">
+          <span class="status-dot"></span>
+          <span id="sync-status-text">Google Drive: Sẵn sàng</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Top Sticky Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <h2 id="header-page-title" class="page-title-badge">Tổng Quan Tài Chính</h2>
+        </div>
+
+        <div class="header-actions">
+          <!-- Privacy Toggle Button -->
+          <button id="btn-privacy-toggle" class="btn-icon" title="Ẩn/Hiện số tiền (Phím tắt: P)">
+            <i data-lucide="eye" style="width: 20px; height: 20px;"></i>
+          </button>
+
+          <!-- Add Transaction Button (Desktop) -->
+          <button id="header-add-btn" class="btn-primary" title="Thêm giao dịch mới (Phím tắt: N)">
+            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+            <span>Thêm Mới</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- View: Dashboard (Tổng quan) -->
+      <main id="view-dashboard" class="page-view active">
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">TÀI SẢN RÒNG (NET WORTH)</span>
+              <div class="stat-icon net-worth"><i data-lucide="trending-up"></i></div>
+            </div>
+            <div id="stat-net-worth" class="stat-amount">0đ</div>
+            <span class="stat-subtext">Tổng ví + Cho vay - Đi vay</span>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">TỔNG SỐ DƯ CÁC VÍ</span>
+              <div class="stat-icon income"><i data-lucide="wallet"></i></div>
+            </div>
+            <div id="stat-total-balance" class="stat-amount income-text">0đ</div>
+            <span class="stat-subtext">Tiền mặt, ngân hàng, e-wallet</span>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">CHO VAY (CẦN THU LẠI)</span>
+              <div class="stat-icon income"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <div id="stat-total-lend" class="stat-amount income-text">0đ</div>
+            <span class="stat-subtext">Các khoản người khác đang nợ</span>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">ĐI VAY (CẦN PHẢI TRẢ)</span>
+              <div class="stat-icon debt"><i data-lucide="arrow-down-left"></i></div>
+            </div>
+            <div id="stat-total-borrow" class="stat-amount debt-text">0đ</div>
+            <span class="stat-subtext">Các khoản nợ đang vay</span>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="dashboard-grid">
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3 class="panel-title"><i data-lucide="bar-chart-3"></i> Biến Động Thu - Chi Trong Năm</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-income-expense-trend"></canvas>
+            </div>
+          </div>
+
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3 class="panel-title"><i data-lucide="pie-chart"></i> Cơ Cấu Chi Tiêu Tháng Này</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-expense-categories"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Quick Feed -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <h3 class="panel-title"><i data-lucide="clock"></i> Giao Dịch Gần Đây</h3>
+            <button class="btn-secondary" style="font-size: 0.85rem; padding: 6px 12px;" onclick="window.app.switchView('transactions')">
+              Xem tất cả <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
+          <div id="transactions-list-container"></div>
+        </div>
+      </main>
+
+      <!-- View: Transactions (Sổ giao dịch) -->
+      <section id="view-transactions" class="page-view">
+        <div class="filter-bar">
+          <button class="filter-pill tx-filter-pill active" data-type="all">Tất cả</button>
+          <button class="filter-pill tx-filter-pill" data-type="expense">Chi tiêu</button>
+          <button class="filter-pill tx-filter-pill" data-type="income">Thu nhập</button>
+          <button class="filter-pill tx-filter-pill" data-type="transfer">Chuyển tiền</button>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <input type="text" id="tx-search-input" class="form-control" placeholder="🔍 Tìm kiếm giao dịch theo ghi chú..." style="max-width: 400px;">
+        </div>
+
+        <div class="card-panel">
+          <div id="transactions-list-container-full"></div>
+        </div>
+      </section>
+
+      <!-- View: Debts (Sổ Vay Nợ) -->
+      <section id="view-debts" class="page-view">
+        <div class="debt-tabs">
+          <button class="debt-tab-btn active" data-tab="lend">
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i>
+            Cho Vay (Cần Thu Lại)
+          </button>
+          <button class="debt-tab-btn" data-tab="borrow">
+            <i data-lucide="arrow-down-left" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i>
+            Đi Vay (Cần Phải Trả)
+          </button>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 20px;">
+          <div class="stat-card">
+            <span class="stat-title">TỔNG CHO VAY CHƯA THU</span>
+            <div id="debt-summary-lend" class="stat-amount income-text">0đ</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-title">TỔNG ĐI VAY CHƯA TRẢ</span>
+            <div id="debt-summary-borrow" class="stat-amount debt-text">0đ</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+          <button class="btn-primary" onclick="UIDebts.openAddModal()">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+            Tạo Khoản Mới
+          </button>
+        </div>
+
+        <div id="debts-list-container"></div>
+      </section>
+
+      <!-- View: Accounts (Ví & Tài khoản) -->
+      <section id="view-accounts" class="page-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Quản lý tiền mặt, thẻ ngân hàng và ví điện tử của bạn</p>
+          <button class="btn-primary" onclick="UIAccounts.openAddModal()">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+            Thêm Ví Mới
+          </button>
+        </div>
+
+        <div id="accounts-list-container" class="stats-grid"></div>
+      </section>
+
+      <!-- View: Budgets (Ngân sách chi tiêu) -->
+      <section id="view-budgets" class="page-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <label class="form-label" style="margin: 0;">Tháng:</label>
+            <input type="month" id="budget-month-select" class="form-control" style="width: auto;">
+          </div>
+          <button class="btn-primary" onclick="UIBudgets.openAddModal()">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+            Thiết Lập Ngân Sách
+          </button>
+        </div>
+
+        <div id="budgets-list-container"></div>
+      </section>
+
+      <!-- View: Analytics (Báo cáo & Phân tích) -->
+      <section id="view-analytics" class="page-view">
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 20px;">
+          <button class="filter-pill analytics-range-btn active" data-range="month">Tháng Này</button>
+          <button class="filter-pill analytics-range-btn" data-range="year">Cả Năm</button>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card-panel">
+            <h3 class="panel-title" style="margin-bottom: 16px;"><i data-lucide="pie-chart"></i> Tỷ Trọng Chi Tiêu</h3>
+            <div class="chart-container" style="height: 320px;">
+              <canvas id="chart-expense-categories-detail"></canvas>
+            </div>
+          </div>
+
+          <div class="card-panel">
+            <h3 class="panel-title" style="margin-bottom: 16px;"><i data-lucide="bar-chart-3"></i> So Sánh Thu - Chi</h3>
+            <div class="chart-container" style="height: 320px;">
+              <canvas id="chart-income-expense-detail"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Settings (Cài đặt & Google Drive) -->
+      <section id="view-settings" class="page-view">
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <h3 class="panel-title" style="margin-bottom: 14px;"><i data-lucide="cloud"></i> Đồng Bộ Google Drive (Offline-First)</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6;">
+            Dữ liệu được lưu trữ trực tiếp trên Google Drive của chính bạn (không qua bất kỳ máy chủ trung gian nào). Mỗi thiết bị đều có thể dùng chung dữ liệu.
+          </p>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">Google Cloud OAuth 2.0 Client ID:</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="settings-client-id" class="form-control" placeholder="Nhập Client ID của bạn (ví dụ: xxx.apps.googleusercontent.com)">
+              <button id="btn-save-client-id" class="btn-secondary">Lưu</button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;">
+              * Xem hướng dẫn tạo Google Client ID miễn phí trong file README hoặc tài liệu đính kèm.
+            </small>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 16px;">
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem;">Tự Động Đồng Bộ Khi Có Thay Đổi</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Tự động tải lên Google Drive sau mỗi lần ghi chép mới</div>
+            </div>
+            <input type="checkbox" id="settings-auto-sync" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              Đồng bộ lần cuối: <strong id="settings-last-sync-time" style="color: var(--text-primary);">Chưa đồng bộ</strong>
+            </div>
+            <button id="btn-sync-now" class="btn-primary">
+              <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+              Đồng Bộ Ngay
+            </button>
+          </div>
+        </div>
+
+        <!-- Export CSV Section -->
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <h3 class="panel-title" style="margin-bottom: 14px;"><i data-lucide="file-spreadsheet"></i> Xuất Dữ Liệu Ra File CSV (Excel)</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+            Xuất file CSV chuẩn định dạng UTF-8 có BOM (mở trực tiếp bằng Microsoft Excel không bị lỗi font tiếng Việt).
+          </p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button id="btn-export-tx-csv" class="btn-secondary">
+              <i data-lucide="download" style="width: 16px; height: 16px; color: var(--income);"></i>
+              Xuất Sổ Giao Dịch (.CSV)
+            </button>
+            <button id="btn-export-debt-csv" class="btn-secondary">
+              <i data-lucide="download" style="width: 16px; height: 16px; color: var(--warning);"></i>
+              Xuất Sổ Vay Nợ (.CSV)
+            </button>
+          </div>
+        </div>
+
+        <!-- Full Backup & Restore Section -->
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <h3 class="panel-title" style="margin-bottom: 14px;"><i data-lucide="database"></i> Sao Lưu & Khôi Phục Dự Phòng (JSON)</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+            Tải toàn bộ cơ sở dữ liệu về máy hoặc khôi phục từ tệp đã sao lưu trước đó. Hỗ trợ đặt mật khẩu mã hóa AES-GCM.
+          </p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <button id="btn-export-json" class="btn-secondary">
+              <i data-lucide="hard-drive-download" style="width: 16px; height: 16px;"></i>
+              Tải File Sao Lưu (.JSON)
+            </button>
+
+            <label class="btn-secondary" style="cursor: pointer; margin: 0;">
+              <i data-lucide="hard-drive-upload" style="width: 16px; height: 16px;"></i>
+              <span>Khôi Phục Từ File</span>
+              <input type="file" id="input-restore-file" accept=".json,.stc" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- Appearance & Privacy Section -->
+        <div class="card-panel">
+          <h3 class="panel-title" style="margin-bottom: 14px;"><i data-lucide="palette"></i> Tùy Chọn Giao Diện & Riêng Tư</h3>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--border-color); margin-bottom: 14px;">
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem;">Giao Diện Ứng Dụng</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Chọn chế độ Tối (Dark mode) hoặc Sáng (Light mode)</div>
+            </div>
+            <select id="settings-theme-select" class="form-control" style="width: 140px;">
+              <option value="dark">🌙 Tối (Dark)</option>
+              <option value="light">☀️ Sáng (Light)</option>
+              <option value="system">💻 Hệ thống</option>
+            </select>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem;">Chế Độ Riêng Tư Mặc Định</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Tự động làm mờ các số tiền khi mở ứng dụng</div>
+            </div>
+            <input type="checkbox" id="settings-privacy-mode" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav">
+      <a href="#" class="mobile-nav-item active" data-view="dashboard">
+        <i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
+        <span>Tổng quan</span>
+      </a>
+      <a href="#" class="mobile-nav-item" data-view="transactions">
+        <i data-lucide="receipt" style="width: 20px; height: 20px;"></i>
+        <span>Giao dịch</span>
+      </a>
+      
+      <!-- Central Floating Action Button -->
+      <div id="fab-add-tx" class="mobile-fab-center" title="Thêm giao dịch mới">
+        <i data-lucide="plus" style="width: 28px; height: 28px; stroke-width: 2.5;"></i>
+      </div>
+
+      <a href="#" class="mobile-nav-item" data-view="debts">
+        <i data-lucide="handshake" style="width: 20px; height: 20px;"></i>
+        <span>Vay Nợ</span>
+      </a>
+      <a href="#" class="mobile-nav-item" data-view="settings">
+        <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
+        <span>Cài đặt</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- ==================== MODAL DIALOGS ==================== -->
+
+  <!-- Modal: Add / Edit Transaction -->
+  <div id="modal-transaction" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-tx-title" class="modal-title">Ghi Chép Mới</h3>
+        <button class="btn-icon" onclick="UITransactions.closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="transaction-form">
+        <input type="hidden" id="tx-id-input">
+        <div class="modal-body">
+          <!-- Type Switcher -->
+          <div class="type-toggle-grid">
+            <button type="button" class="type-toggle-btn modal-type-btn active expense" data-type="expense">
+              <i data-lucide="arrow-down-circle"></i> Chi Tiêu
+            </button>
+            <button type="button" class="type-toggle-btn modal-type-btn income" data-type="income">
+              <i data-lucide="arrow-up-circle"></i> Thu Nhập
+            </button>
+            <button type="button" class="type-toggle-btn modal-type-btn transfer" data-type="transfer">
+              <i data-lucide="arrow-right-left"></i> Chuyển Khoản
+            </button>
+          </div>
+
+          <!-- Large Amount Input with Quick Calculator -->
+          <div class="form-group">
+            <label class="form-label">Số Tiền (Hỗ trợ tính nhanh: 50k, 25k+15k...)</label>
+            <div class="money-input-wrapper">
+              <input type="text" id="tx-amount-input" class="form-control money-input-lg" placeholder="0" required inputmode="numeric">
+              <span class="money-currency-tag">₫</span>
+            </div>
+            <div class="quick-amount-buttons">
+              <span class="quick-chip quick-amount-chip" data-value="10000">+10k</span>
+              <span class="quick-chip quick-amount-chip" data-value="20000">+20k</span>
+              <span class="quick-chip quick-amount-chip" data-value="50000">+50k</span>
+              <span class="quick-chip quick-amount-chip" data-value="100000">+100k</span>
+              <span class="quick-chip quick-amount-chip" data-value="500000">+500k</span>
+            </div>
+          </div>
+
+          <!-- Category (for Expense/Income) -->
+          <div id="tx-category-group" class="form-group">
+            <label class="form-label">Danh Mục</label>
+            <select id="tx-category-select" class="form-control"></select>
+          </div>
+
+          <!-- Source Account -->
+          <div class="form-group">
+            <label id="tx-account-label" class="form-label">Tài Khoản / Ví</label>
+            <select id="tx-account-select" class="form-control" required></select>
+          </div>
+
+          <!-- Destination Account (for Transfer) -->
+          <div id="tx-transfer-target-group" class="form-group" style="display: none;">
+            <label class="form-label">Chuyển Đến Ví</label>
+            <select id="tx-to-account-select" class="form-control"></select>
+          </div>
+
+          <!-- Date -->
+          <div class="form-group">
+            <label class="form-label">Ngày Giao Dịch</label>
+            <input type="date" id="tx-date-input" class="form-control" required>
+          </div>
+
+          <!-- Note -->
+          <div class="form-group">
+            <label class="form-label">Ghi Chú</label>
+            <input type="text" id="tx-note-input" class="form-control" placeholder="Ví dụ: Ăn trưa với đồng nghiệp...">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="UITransactions.closeModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu Giao Dịch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Debt Record -->
+  <div id="modal-debt" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Tạo Khoản Vay Nợ Mới</h3>
+        <button class="btn-icon" onclick="UIDebts.closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="debt-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Loại Hình</label>
+            <select id="debt-type-select" class="form-control">
+              <option value="lend">Cho Vay (Cho người khác mượn - Nợ cần thu)</option>
+              <option value="borrow">Đi Vay (Mượn nợ người khác - Nợ cần trả)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Người Vay / Chủ Nợ</label>
+            <input type="text" id="debt-person-input" class="form-control" placeholder="Ví dụ: Anh Nam, Chị Lan..." required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Số Tiền (VNĐ)</label>
+            <input type="number" id="debt-amount-input" class="form-control" placeholder="0" min="1000" step="1000" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tài Khoản / Ví Trích Tiền</label>
+            <select id="debt-account-select" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Hạn Trả (Tùy chọn)</label>
+            <input type="date" id="debt-date-input" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ghi Chú</label>
+            <input type="text" id="debt-note-input" class="form-control" placeholder="Lý do vay, thỏa thuận...">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="UIDebts.closeModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu Khoản Nợ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Record Debt Payment / Collection -->
+  <div id="modal-debt-payment" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-debt-payment-title" class="modal-title">Ghi Nhận Thanh Toán</h3>
+        <button class="btn-icon" onclick="UIDebts.closePaymentModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="debt-payment-form">
+        <input type="hidden" id="payment-debt-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label id="payment-amount-label" class="form-label">Số Tiền Thanh Toán (VNĐ)</label>
+            <input type="number" id="payment-amount-input" class="form-control" min="1000" step="1000" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Cập Nhật Vào Ví</label>
+            <select id="payment-account-select" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ghi Chú</label>
+            <input type="text" id="payment-note-input" class="form-control" placeholder="Đợt 1, chuyển khoản qua app...">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="UIDebts.closePaymentModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Xác Nhận</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Account Form -->
+  <div id="modal-account" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Thông Tin Ví / Tài Khoản</h3>
+        <button class="btn-icon" onclick="UIAccounts.closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="account-form">
+        <input type="hidden" id="acc-id-input">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Tên Ví / Ngân Hàng</label>
+            <input type="text" id="acc-name-input" class="form-control" placeholder="Ví dụ: Techcombank, Ví Tiền Mặt..." required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Loại Tài Khoản</label>
+            <select id="acc-type-select" class="form-control">
+              <option value="cash">Tiền mặt</option>
+              <option value="bank">Tài khoản Ngân hàng</option>
+              <option value="ewallet">Ví điện tử (MoMo, ZaloPay...)</option>
+              <option value="credit">Thẻ tín dụng (Credit Card)</option>
+              <option value="saving">Sổ tiết kiệm</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Số Dư Hiện Tại (VNĐ)</label>
+            <input type="number" id="acc-balance-input" class="form-control" placeholder="0" step="1000">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="UIAccounts.closeModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu Ví</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Budget Form -->
+  <div id="modal-budget" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Thiết Lập Ngân Sách</h3>
+        <button class="btn-icon" onclick="UIBudgets.closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="budget-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Tháng Áp Dụng</label>
+            <input type="month" id="budget-month-input" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Danh Mục Chi Tiêu</label>
+            <select id="budget-category-select" class="form-control"></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Hạn Mức Tối Đa (VNĐ)</label>
+            <input type="number" id="budget-amount-input" class="form-control" placeholder="Ví dụ: 3000000" min="50000" step="10000" required>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="UIBudgets.closeModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu Ngân Sách</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Vendor Scripts (Offline Pre-Cached) -->
+  <script src="./vendor/dexie.min.js"></script>
+  <script src="./vendor/chart.umd.min.js"></script>
+  <script src="./vendor/lucide.min.js"></script>
+
+  <!-- App Core Modules -->
+  <script src="./js/crypto.js"></script>
+  <script src="./js/db.js"></script>
+  <script src="./js/google-drive.js"></script>
+  <script src="./js/csv-export.js"></script>
+  <script src="./js/backup.js"></script>
+
+  <!-- UI Views Modules -->
+  <script src="./js/ui-transactions.js"></script>
+  <script src="./js/ui-debts.js"></script>
+  <script src="./js/ui-accounts.js"></script>
+  <script src="./js/ui-budgets.js"></script>
+  <script src="./js/ui-analytics.js"></script>
+  <script src="./js/ui-settings.js"></script>
+
+  <!-- Main Entry Coordinator -->
+  <script src="./js/app.js"></script>
+</body>
+</html>
