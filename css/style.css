@@ -256,7 +256,10 @@ input, textarea, select, button {
 
 /* Top App Header */
 .app-header {
-  height: var(--header-height);
+  height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
   background: var(--bg-glass);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
@@ -267,7 +270,6 @@ input, textarea, select, button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
 }
 
 .header-left {
@@ -970,15 +972,17 @@ input, textarea, select, button {
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--bottom-nav-height);
-  background: var(--bg-glass);
+  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
+  background: var(--bg-surface);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
   border-top: 1px solid var(--border-color);
   z-index: 50;
   justify-content: space-around;
   align-items: center;
-  padding: 0 8px;
 }
 
 .mobile-nav-item {
@@ -1021,6 +1025,92 @@ input, textarea, select, button {
   transform: scale(0.92);
 }
 
+/* Custom In-App Numeric Keypad for Mobile & Desktop */
+.custom-keypad-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-card);
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  margin-top: 10px;
+}
+
+.keypad-quick-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.keypad-quick-row::-webkit-scrollbar {
+  display: none;
+}
+
+.keypad-chip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.keypad-chip:hover, .keypad-chip:active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  transform: scale(0.96);
+}
+
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.keypad-btn {
+  height: 50px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.keypad-btn:active {
+  background: var(--bg-card-hover);
+  transform: scale(0.94);
+  border-color: var(--border-focus);
+}
+
+.keypad-btn.action {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.keypad-btn.action-primary {
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+.keypad-btn.action-primary:active {
+  background: var(--primary-hover);
+}
+
 /* Privacy Mode Mask */
 .privacy-masked {
   filter: blur(6px);
@@ -1045,7 +1135,7 @@ input, textarea, select, button {
 
   .main-wrapper {
     margin-left: 0;
-    padding-bottom: calc(var(--bottom-nav-height) + 24px);
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 24px);
   }
 
   .mobile-bottom-nav {
@@ -1077,8 +1167,9 @@ input, textarea, select, button {
 
   .modal-dialog {
     max-width: 100%;
-    border-radius: 20px 20px 0 0;
-    max-height: 85vh;
+    border-radius: 24px 24px 0 0;
+    max-height: 92vh;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
     animation: slideUpBottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 

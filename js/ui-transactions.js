@@ -32,26 +32,93 @@ const UITransactions = {
       });
     }
 
-    // Amount input expression evaluator (Quick Calculator e.g. 50k, 25000+15000)
+    // Amount input formatting with dots in real-time
     const amountInput = document.getElementById('tx-amount-input');
     if (amountInput) {
+      amountInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        // Don't format if user is writing math expression with + - * /
+        if (!/[+\-*/]/.test(val) && !/[kmtr]/i.test(val)) {
+          const raw = val.replace(/[^0-9]/g, '');
+          if (raw) {
+            e.target.value = new Intl.NumberFormat('vi-VN').format(Number(raw));
+          } else {
+            e.target.value = '';
+          }
+        }
+      });
+
       amountInput.addEventListener('blur', (e) => {
         const evaluated = this.evaluateAmountExpression(e.target.value);
-        if (evaluated !== null) {
-          e.target.value = evaluated;
+        if (evaluated !== null && evaluated > 0) {
+          e.target.value = new Intl.NumberFormat('vi-VN').format(evaluated);
         }
       });
     }
 
-    // Quick chips (10k, 50k, 100k, 500k)
-    document.querySelectorAll('.quick-amount-chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        const val = Number(e.target.dataset.value);
+    // Custom Keypad Button Handlers
+    document.querySelectorAll('#tx-custom-keypad .keypad-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = btn.dataset.key;
         const input = document.getElementById('tx-amount-input');
-        if (input) {
-          const current = Number(input.value) || 0;
-          input.value = current + val;
+        if (!input) return;
+
+        let cur = input.value.trim();
+
+        if (key === 'clear') {
+          input.value = '';
+        } else if (key === 'backspace') {
+          // Remove last character
+          if (cur.length > 0) {
+            let next = cur.slice(0, -1).trim();
+            // Re-format if purely numeric
+            if (/^[0-9.]*$/.test(next)) {
+              const raw = next.replace(/\./g, '');
+              input.value = raw ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '';
+            } else {
+              input.value = next;
+            }
+          }
+        } else if (key === '+') {
+          if (cur && !/[+\-*/]\s*$/.test(cur)) {
+            input.value = cur + ' + ';
+          }
+        } else if (key === 'done') {
+          const evaluated = this.evaluateAmountExpression(cur);
+          if (evaluated !== null) {
+            input.value = new Intl.NumberFormat('vi-VN').format(evaluated);
+          }
+          document.getElementById('tx-note-input')?.focus();
+        } else {
+          // Digits 0-9, 00, 000
+          if (cur.includes('+')) {
+            // Expression mode
+            input.value = cur + key;
+          } else {
+            // Normal single number mode
+            const raw = (cur.replace(/\./g, '') + key).replace(/^0+/, '');
+            if (raw) {
+              input.value = new Intl.NumberFormat('vi-VN').format(Number(raw));
+            } else {
+              input.value = '0';
+            }
+          }
         }
+      });
+    });
+
+    // Custom Keypad Quick Chips (+10.000, +50.000, +100.000, ...)
+    document.querySelectorAll('#tx-custom-keypad .keypad-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        const val = Number(chip.dataset.val);
+        const input = document.getElementById('tx-amount-input');
+        if (!input) return;
+
+        const evaluated = this.evaluateAmountExpression(input.value) || 0;
+        const next = evaluated + val;
+        input.value = new Intl.NumberFormat('vi-VN').format(next);
       });
     });
 
@@ -77,14 +144,16 @@ const UITransactions = {
 
   evaluateAmountExpression(expr) {
     if (!expr) return null;
-    let clean = expr.toLowerCase().replace(/,/g, '').trim();
+    let clean = String(expr).toLowerCase().trim();
     // Support shorthand 'k' (nghìn) and 'tr' / 'm' (triệu)
     clean = clean.replace(/(\d+(\.\d+)?)k/g, '($1 * 1000)');
     clean = clean.replace(/(\d+(\.\d+)?)tr/g, '($1 * 1000000)');
     clean = clean.replace(/(\d+(\.\d+)?)m/g, '($1 * 1000000)');
+    // Remove Vietnamese thousand dots '.' and commas ','
+    clean = clean.replace(/\./g, '').replace(/,/g, '');
 
-    // Only allow safe math characters: digits, ., +, -, *, /, (, )
-    if (/^[0-9+\-*/. ()]+$/.test(clean)) {
+    // Only allow safe math characters: digits, +, -, *, /, (, )
+    if (/^[0-9+\-*/ ()]+$/.test(clean)) {
       try {
         const result = Function(`'use strict'; return (${clean})`)();
         if (typeof result === 'number' && !isNaN(result) && result >= 0) {

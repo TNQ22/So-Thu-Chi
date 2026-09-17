@@ -21,6 +21,23 @@ const UIDebts = {
       });
     });
 
+    // Formatting with dots in real-time for debt amounts
+    const debtAmountInput = document.getElementById('debt-amount-input');
+    if (debtAmountInput) {
+      debtAmountInput.addEventListener('input', (e) => {
+        const raw = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = raw ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '';
+      });
+    }
+
+    const paymentAmountInput = document.getElementById('payment-amount-input');
+    if (paymentAmountInput) {
+      paymentAmountInput.addEventListener('input', (e) => {
+        const raw = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = raw ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '';
+      });
+    }
+
     // Add Debt Form Submit
     const debtForm = document.getElementById('debt-form');
     if (debtForm) {
@@ -76,8 +93,8 @@ const UIDebts = {
   async handleDebtSubmit() {
     const type = document.getElementById('debt-type-select').value;
     const personName = document.getElementById('debt-person-input').value.trim();
-    const amountStr = document.getElementById('debt-amount-input').value;
-    const amount = Number(amountStr);
+    const amountRaw = (document.getElementById('debt-amount-input').value || '').replace(/\./g, '');
+    const amount = Number(amountRaw);
     const dueDate = document.getElementById('debt-date-input').value;
     const accountId = document.getElementById('debt-account-select').value;
     const note = document.getElementById('debt-note-input').value.trim();
@@ -119,8 +136,7 @@ const UIDebts = {
     if (!modal) return;
 
     debtIdInput.value = debt.id;
-    amountInput.value = debt.remainingAmount; // default to full remaining
-    amountInput.max = debt.remainingAmount;
+    amountInput.value = new Intl.NumberFormat('vi-VN').format(debt.remainingAmount);
 
     if (debt.type === 'lend') {
       if (title) title.textContent = `Thu Nợ: ${debt.personName}`;
@@ -146,7 +162,8 @@ const UIDebts = {
 
   async handlePaymentSubmit() {
     const debtId = document.getElementById('payment-debt-id').value;
-    const amount = Number(document.getElementById('payment-amount-input').value);
+    const amountRaw = (document.getElementById('payment-amount-input').value || '').replace(/\./g, '');
+    const amount = Number(amountRaw);
     const accountId = document.getElementById('payment-account-select').value;
     const note = document.getElementById('payment-note-input').value.trim();
 
