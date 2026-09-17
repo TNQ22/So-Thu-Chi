@@ -169,15 +169,34 @@ const UITransactions = {
   handleTypeChange(type) {
     const categoryGroup = document.getElementById('tx-category-group');
     const transferTargetGroup = document.getElementById('tx-transfer-target-group');
-    const categorySelect = document.getElementById('tx-category-select');
+    const debtPersonGroup = document.getElementById('tx-debt-person-group');
+    const debtDueGroup = document.getElementById('tx-debt-due-group');
+    const accountLabel = document.getElementById('tx-account-label');
+    const personLabel = document.getElementById('tx-debt-person-label');
 
     if (type === 'transfer') {
       if (categoryGroup) categoryGroup.style.display = 'none';
+      if (debtPersonGroup) debtPersonGroup.style.display = 'none';
+      if (debtDueGroup) debtDueGroup.style.display = 'none';
       if (transferTargetGroup) transferTargetGroup.style.display = 'flex';
+      if (accountLabel) accountLabel.textContent = 'Trích Từ Ví';
+    } else if (type === 'lend' || type === 'borrow') {
+      if (categoryGroup) categoryGroup.style.display = 'none';
+      if (transferTargetGroup) transferTargetGroup.style.display = 'none';
+      if (debtPersonGroup) debtPersonGroup.style.display = 'flex';
+      if (debtDueGroup) debtDueGroup.style.display = 'flex';
+      if (personLabel) {
+        personLabel.textContent = type === 'lend' ? 'Người Vay / Chi Cho Ai' : 'Chủ Nợ / Mượn Từ Ai';
+      }
+      if (accountLabel) {
+        accountLabel.textContent = type === 'lend' ? 'Trích Tiền Từ Ví' : 'Cộng Tiền Vào Ví';
+      }
     } else {
+      if (debtPersonGroup) debtPersonGroup.style.display = 'none';
+      if (debtDueGroup) debtDueGroup.style.display = 'none';
       if (categoryGroup) categoryGroup.style.display = 'flex';
       if (transferTargetGroup) transferTargetGroup.style.display = 'none';
-      // Filter categories matching type
+      if (accountLabel) accountLabel.textContent = 'Tài Khoản / Ví';
       this.populateCategories(type);
     }
   },
@@ -220,6 +239,8 @@ const UITransactions = {
     form.reset();
     document.getElementById('tx-id-input').value = '';
     document.getElementById('tx-date-input').value = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    document.getElementById('tx-time-input').value = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
     if (title) title.textContent = 'Ghi Chép Mới';
 
     // Set active type button
@@ -246,7 +267,7 @@ const UITransactions = {
     const type = activeTypeBtn ? activeTypeBtn.dataset.type : 'expense';
 
     const amountInput = document.getElementById('tx-amount-input').value;
-    const evaluatedAmount = this.evaluateAmountExpression(amountInput) || Number(amountInput);
+    const evaluatedAmount = this.evaluateAmountExpression(amountInput) || Number(amountInput.replace(/\./g, ''));
 
     if (!evaluatedAmount || evaluatedAmount <= 0) {
       showToast('Vui lòng nhập số tiền hợp lệ', 'error');
@@ -257,10 +278,48 @@ const UITransactions = {
     const toAccountId = document.getElementById('tx-to-account-select')?.value;
     const categoryId = document.getElementById('tx-category-select')?.value;
     const date = document.getElementById('tx-date-input').value;
+    const time = document.getElementById('tx-time-input').value || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
     const note = document.getElementById('tx-note-input').value.trim();
 
     if (type === 'transfer' && accountId === toAccountId) {
       showToast('Ví chuyển và ví nhận không thể trùng nhau', 'error');
+      return;
+    }
+
+    if (type === 'lend' || type === 'borrow') {
+      const personName = document.getElementById('tx-person-input').value.trim();
+      const dueDate = document.getElementById('tx-due-date-input').value;
+      if (!personName) {
+        showToast(type === 'lend' ? 'Vui lòng nhập người vay hoặc chi cho ai' : 'Vui lòng nhập chủ nợ hoặc mượn từ ai', 'error');
+        return;
+      }
+
+      // Add to Debts table (tự động cập nhật số dư ví trong addDebt)
+      await addDebt({
+        type,
+        personName,
+        originalAmount: evaluatedAmount,
+        dueDate,
+        accountId,
+        note: (note ? note + ' ' : '') + `[Lúc ${time}]`
+      });
+
+      // Also record as a visible transaction
+      await db.transactions.add({
+        type: type === 'lend' ? 'expense' : 'income',
+        amount: evaluatedAmount,
+        accountId: Number(accountId),
+        categoryId: null,
+        date,
+        time,
+        note: `${type === 'lend' ? 'Cho vay / Chi hộ' : 'Mượn / Đi vay'}: ${personName}${note ? ' - ' + note : ''}`,
+        isDeleted: 0,
+        updatedAt: Date.now()
+      });
+
+      this.closeModal();
+      showToast(type === 'lend' ? 'Đã ghi nhận khoản cho vay / chi hộ' : 'Đã ghi nhận khoản mượn / đi vay', 'success');
+      window.app.refreshAll();
       return;
     }
 
@@ -276,11 +335,12 @@ const UITransactions = {
       toAccountId: type === 'transfer' ? toAccountId : null,
       categoryId: type !== 'transfer' ? categoryId : null,
       date,
+      time,
       note
     });
 
     this.closeModal();
-    showToast(id ? 'Đã cập nhật giao dịch' : 'Đã thêm giao dịch mới', 'success');
+    showToast(id ? 'Đã cập nhật ghi chép' : 'Đã thêm ghi chép mới', 'success');
     window.app.refreshAll();
   },
 
@@ -384,9 +444,10 @@ const UITransactions = {
           amountClass = 'income';
         }
 
+        const timeDisplay = t.time ? `<span style="color: var(--primary); font-weight: 600;">${t.time}</span> • ` : '';
         const accountDisplay = t.type === 'transfer' 
-          ? `${fromAcc ? fromAcc.name : 'Ví'} ➔ ${toAcc ? toAcc.name : 'Ví'}`
-          : `${fromAcc ? fromAcc.name : 'Ví'}${cat ? ` • ${cat.name}` : ''}`;
+          ? `${timeDisplay}${fromAcc ? fromAcc.name : 'Ví'} ➔ ${toAcc ? toAcc.name : 'Ví'}`
+          : `${timeDisplay}${fromAcc ? fromAcc.name : 'Ví'}${cat ? ` • ${cat.name}` : ''}`;
 
         html += `
           <div class="tx-card" onclick="UITransactions.openEditModal(${t.id})">
@@ -396,7 +457,7 @@ const UITransactions = {
               </div>
               <div class="tx-info">
                 <span class="tx-title">${escapeHTML(title)}</span>
-                <span class="tx-meta">${escapeHTML(accountDisplay)}</span>
+                <span class="tx-meta">${accountDisplay}</span>
               </div>
             </div>
             <div class="tx-right">
@@ -425,10 +486,11 @@ const UITransactions = {
     const title = document.getElementById('modal-tx-title');
     if (!modal) return;
 
-    if (title) title.textContent = 'Chi Tiết Giao Dịch';
+    if (title) title.textContent = 'Chi Tiết Ghi Chép';
     document.getElementById('tx-id-input').value = tx.id;
-    document.getElementById('tx-amount-input').value = tx.amount;
+    document.getElementById('tx-amount-input').value = new Intl.NumberFormat('vi-VN').format(tx.amount);
     document.getElementById('tx-date-input').value = tx.date;
+    document.getElementById('tx-time-input').value = tx.time || '';
     document.getElementById('tx-note-input').value = tx.note || '';
 
     // Active button

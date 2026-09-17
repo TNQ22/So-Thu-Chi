@@ -15,7 +15,7 @@
   <meta name="theme-color" content="#0a0f1d">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Sổ Thu Chi">
   
   <!-- App Icons -->
@@ -24,6 +24,9 @@
 
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="./css/style.css">
+
+  <!-- Offline Icons Library (Loaded synchronously in head for instant icon rendering) -->
+  <script src="./vendor/lucide.min.js"></script>
 
   <!-- Google Identity Services (GIS) for Google Drive Auth -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -416,9 +419,9 @@
         <i data-lucide="plus" style="width: 28px; height: 28px; stroke-width: 2.5;"></i>
       </div>
 
-      <a href="#" class="mobile-nav-item" data-view="debts">
-        <i data-lucide="handshake" style="width: 20px; height: 20px;"></i>
-        <span>Vay Nợ</span>
+      <a href="#" class="mobile-nav-item" data-view="analytics">
+        <i data-lucide="pie-chart" style="width: 20px; height: 20px;"></i>
+        <span>Báo cáo</span>
       </a>
       <a href="#" class="mobile-nav-item" data-view="settings">
         <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
@@ -439,8 +442,8 @@
       <form id="transaction-form">
         <input type="hidden" id="tx-id-input">
         <div class="modal-body">
-          <!-- Type Switcher -->
-          <div class="type-toggle-grid">
+          <!-- Type Switcher (5 Types) -->
+          <div class="type-toggle-grid-5">
             <button type="button" class="type-toggle-btn modal-type-btn active expense" data-type="expense">
               <i data-lucide="arrow-down-circle"></i> Chi Tiêu
             </button>
@@ -448,7 +451,13 @@
               <i data-lucide="arrow-up-circle"></i> Thu Nhập
             </button>
             <button type="button" class="type-toggle-btn modal-type-btn transfer" data-type="transfer">
-              <i data-lucide="arrow-right-left"></i> Chuyển Khoản
+              <i data-lucide="arrow-right-left"></i> Chuyển Tiền
+            </button>
+            <button type="button" class="type-toggle-btn modal-type-btn lend" data-type="lend">
+              <i data-lucide="handshake"></i> Cho Vay / Chi Hộ
+            </button>
+            <button type="button" class="type-toggle-btn modal-type-btn borrow" data-type="borrow">
+              <i data-lucide="badge-dollar-sign"></i> Mượn / Đi Vay
             </button>
           </div>
 
@@ -499,6 +508,17 @@
             </div>
           </div>
 
+          <!-- Debt / Loan Specific Fields -->
+          <div id="tx-debt-person-group" class="form-group" style="display: none;">
+            <label id="tx-debt-person-label" class="form-label">Người Vay / Chi Cho Ai</label>
+            <input type="text" id="tx-person-input" class="form-control" placeholder="Ví dụ: Anh Nam, Bạn Lan...">
+          </div>
+
+          <div id="tx-debt-due-group" class="form-group" style="display: none;">
+            <label class="form-label">Hạn Trả (Tùy chọn)</label>
+            <input type="date" id="tx-due-date-input" class="form-control">
+          </div>
+
           <!-- Category (for Expense/Income) -->
           <div id="tx-category-group" class="form-group">
             <label class="form-label">Danh Mục</label>
@@ -517,10 +537,16 @@
             <select id="tx-to-account-select" class="form-control"></select>
           </div>
 
-          <!-- Date -->
-          <div class="form-group">
-            <label class="form-label">Ngày Giao Dịch</label>
-            <input type="date" id="tx-date-input" class="form-control" required>
+          <!-- Date & Time Row -->
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">Ngày Giao Dịch</label>
+              <input type="date" id="tx-date-input" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Giờ</label>
+              <input type="time" id="tx-time-input" class="form-control" required>
+            </div>
           </div>
 
           <!-- Note -->

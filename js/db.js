@@ -75,6 +75,7 @@ async function initDatabase() {
 // Transaction operations with automatic balance recalculation
 async function addTransaction(data) {
   const now = Date.now();
+  const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
   const tx = {
     ...data,
     amount: Number(data.amount),
@@ -82,6 +83,7 @@ async function addTransaction(data) {
     toAccountId: data.toAccountId ? Number(data.toAccountId) : null,
     categoryId: data.categoryId ? Number(data.categoryId) : null,
     date: data.date || new Date().toISOString().split('T')[0],
+    time: data.time || currentTime,
     isDeleted: 0,
     updatedAt: now
   };

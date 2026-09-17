@@ -47,6 +47,10 @@ class App {
 
   async init() {
     // 1. Initialize IndexedDB
+    // 0. Render icons immediately
+    if (window.lucide) lucide.createIcons();
+
+    // 1. Initialize IndexedDB
     await initDatabase();
 
     // 2. Initialize Google Drive Sync engine
@@ -73,6 +77,9 @@ class App {
 
     // 7. Render initial data
     await this.refreshAll();
+
+    // Render icons again after dynamic DOM render
+    if (window.lucide) lucide.createIcons();
 
     // 8. Register Service Worker for PWA
     this.registerServiceWorker();
@@ -119,9 +126,21 @@ class App {
       if (window.lucide) lucide.createIcons();
     }
 
-    // Toggle mask class on monetary elements
-    document.querySelectorAll('.stat-amount, .tx-amount').forEach(el => {
-      el.classList.toggle('privacy-masked', enabled);
+    // Mask numbers with ****** instead of eye-straining blur
+    document.querySelectorAll('.stat-amount, .tx-amount, .debt-amounts div div:nth-child(2)').forEach(el => {
+      if (enabled) {
+        if (!el.dataset.rawAmount && el.textContent.trim() !== '******') {
+          el.dataset.rawAmount = el.textContent.trim();
+        }
+        el.textContent = '******';
+        el.classList.add('privacy-masked');
+      } else {
+        if (el.dataset.rawAmount) {
+          el.textContent = el.dataset.rawAmount;
+          delete el.dataset.rawAmount;
+        }
+        el.classList.remove('privacy-masked');
+      }
     });
   }
 

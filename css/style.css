@@ -920,10 +920,29 @@ input, textarea, select, button {
   border-color: var(--income);
 }
 
-.type-toggle-btn.active.transfer {
-  background: var(--transfer-bg);
-  color: var(--transfer);
-  border-color: var(--transfer);
+.type-toggle-grid-5 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.type-toggle-grid-5 .type-toggle-btn {
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 95px;
+  padding: 8px 6px;
+  font-size: 0.8rem;
+}
+
+.type-toggle-btn.active.lend {
+  background: var(--income-bg);
+  color: var(--income);
+  border-color: var(--income);
+}
+
+.type-toggle-btn.active.borrow {
+  background: var(--debt-bg);
+  color: var(--warning);
+  border-color: var(--warning);
 }
 
 /* Toast Notifications */
@@ -977,8 +996,6 @@ input, textarea, select, button {
   padding-left: max(8px, env(safe-area-inset-left, 0px));
   padding-right: max(8px, env(safe-area-inset-right, 0px));
   background: var(--bg-surface);
-  backdrop-filter: var(--backdrop-blur);
-  -webkit-backdrop-filter: var(--backdrop-blur);
   border-top: 1px solid var(--border-color);
   z-index: 50;
   justify-content: space-around;
@@ -993,7 +1010,7 @@ input, textarea, select, button {
   gap: 3px;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 500;
   flex: 1;
   padding: 6px 0;
@@ -1006,16 +1023,16 @@ input, textarea, select, button {
 
 .mobile-fab-center {
   position: relative;
-  top: -16px;
-  width: 52px;
-  height: 52px;
+  top: -14px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
   border: 3px solid var(--bg-surface);
   cursor: pointer;
   transition: transform 0.2s;
@@ -1031,10 +1048,10 @@ input, textarea, select, button {
   flex-direction: column;
   gap: 8px;
   background: var(--bg-card);
-  padding: 12px;
+  padding: 10px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .keypad-quick-row {
@@ -1052,9 +1069,9 @@ input, textarea, select, button {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 7px 12px;
+  padding: 6px 10px;
   border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
@@ -1070,16 +1087,16 @@ input, textarea, select, button {
 .keypad-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 
 .keypad-btn {
-  height: 50px;
+  height: 46px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -1099,7 +1116,7 @@ input, textarea, select, button {
 .keypad-btn.action {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .keypad-btn.action-primary {
@@ -1111,9 +1128,11 @@ input, textarea, select, button {
   background: var(--primary-hover);
 }
 
-/* Privacy Mode Mask */
+/* Privacy Mode Mask: Zero Eye Strain (Mask with asterisks, NO blur) */
 .privacy-masked {
-  filter: blur(6px);
+  filter: none !important;
+  font-family: monospace;
+  letter-spacing: 2px;
   user-select: none;
 }
 
@@ -1127,6 +1146,8 @@ input, textarea, select, button {
 @media (max-width: 768px) {
   :root {
     --sidebar-width: 0px;
+    --header-height: 52px;
+    --bottom-nav-height: 56px;
   }
 
   .app-sidebar {
@@ -1135,7 +1156,7 @@ input, textarea, select, button {
 
   .main-wrapper {
     margin-left: 0;
-    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 24px);
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 14px);
   }
 
   .mobile-bottom-nav {
@@ -1143,7 +1164,7 @@ input, textarea, select, button {
   }
 
   .page-view {
-    padding: 16px 14px;
+    padding: 14px 12px;
   }
 
   .stats-grid {
@@ -1152,11 +1173,11 @@ input, textarea, select, button {
   }
 
   .stat-card {
-    padding: 14px;
+    padding: 12px;
   }
 
   .stat-amount {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   /* Modal on mobile becomes a Bottom Sheet */
@@ -1167,9 +1188,9 @@ input, textarea, select, button {
 
   .modal-dialog {
     max-width: 100%;
-    border-radius: 24px 24px 0 0;
-    max-height: 92vh;
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
     animation: slideUpBottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 

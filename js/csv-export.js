@@ -43,7 +43,7 @@ const CSVExportService = {
     const accMap = new Map(accounts.map(a => [a.id, a.name]));
 
     // CSV Headers
-    const headers = ['Mã GD', 'Ngày', 'Loại giao dịch', 'Số tiền (VNĐ)', 'Danh mục', 'Tài khoản / Ví', 'Ví nhận (Chuyển khoản)', 'Ghi chú'];
+    const headers = ['Mã GD', 'Ngày', 'Giờ', 'Loại giao dịch', 'Số tiền (VNĐ)', 'Danh mục', 'Tài khoản / Ví', 'Ví nhận (Chuyển khoản)', 'Ghi chú'];
     const rows = [headers.map(this.escapeCSV).join(',')];
 
     for (const t of txs) {
@@ -55,6 +55,7 @@ const CSVExportService = {
       const row = [
         t.id,
         t.date,
+        t.time || '',
         typeLabel,
         t.amount,
         catName,
