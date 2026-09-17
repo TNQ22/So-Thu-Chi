@@ -36,7 +36,7 @@ git init
 git add .
 git commit -m "Khoi tao ung dung So Thu Chi PWA"
 git branch -M main
-git remote add origin https://github.com/<tai-khoan-cua-ban>/<ten-repo>.git
+git remote add origin https://github.com/TNQ22/sothuchi.git
 git push -u origin main
 ```
 
@@ -44,7 +44,7 @@ git push -u origin main
 1. Trên trang repo GitHub của bạn, vào tab **Settings** -> mục **Pages** (ở cột bên trái).
 2. Tại phần **Build and deployment** -> **Source**: Chọn **GitHub Actions** (đã có sẵn file workflow tự động `.github/workflows/deploy.yml`).
 3. Đợi khoảng 1 phút, trang web của bạn sẽ hiển thị đường dẫn truy cập dạng:
-   `https://<tai-khoan-cua-ban>.github.io/<ten-repo>/`
+   👉 **`https://tnq22.github.io/sothuchi/`**
 4. **Tùy chọn Tên miền riêng (Custom Domain)**: Nếu bạn có tên miền riêng (ví dụ: `sothuchi.tenban.com`), bạn chỉ cần nhập vào ô **Custom domain** trong trang cài đặt Pages.
 
 ---
