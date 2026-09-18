@@ -1236,3 +1236,397 @@ input, textarea, select, button {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* ==========================================================================
+   ADVANCED TRANSACTION UI & QUICK CATEGORY SYSTEM
+   ========================================================================== */
+
+/* Keypad Trigger Button in Money Input */
+.keypad-trigger-btn {
+  position: absolute;
+  right: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.keypad-trigger-btn:hover {
+  background: var(--primary-light);
+}
+
+/* Selected Category Row */
+.category-selected-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.category-selected-row:hover, .category-selected-row:active {
+  border-color: var(--primary);
+  background: var(--bg-card-hover);
+}
+.category-selected-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.category-icon-bubble {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Quick Category Grid (~4 Rows of Chips) */
+.quick-category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .quick-category-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+}
+.quick-cat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  gap: 4px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.quick-cat-chip:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+.quick-cat-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.quick-cat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.quick-cat-name {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.quick-cat-chip.manage-btn {
+  border-style: dashed;
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
+}
+.quick-cat-chip.manage-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Collapsible "Thêm chi tiết" Section */
+.collapsible-section {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 10px;
+}
+.collapsible-header-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 0;
+  transition: color 0.15s;
+}
+.collapsible-header-btn:hover {
+  color: var(--primary);
+}
+.borrow-checkbox-box {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+.btn-text-action {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.btn-text-action:hover {
+  background: var(--primary-light);
+}
+
+/* ==========================================================================
+   POPUP NUMERIC KEYPAD BOTTOM SHEET
+   ========================================================================== */
+.keypad-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+}
+.keypad-popup-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.keypad-popup-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.keypad-popup-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg-surface);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--border-color);
+  padding: 14px 16px max(14px, env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+  transform: translateY(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.keypad-popup-overlay.open .keypad-popup-sheet {
+  transform: translateY(0);
+}
+.keypad-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+.keypad-live-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+#keypad-live-val {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+.keypad-live-cur {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.keypad-done-pill {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+  transition: transform 0.15s;
+}
+.keypad-done-pill:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   FULL CATEGORY PICKER (4 TABS) & CATEGORY MANAGER
+   ========================================================================== */
+.modal-category-picker-dialog {
+  max-width: 560px;
+}
+.cat-picker-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.cat-tab-btn {
+  padding: 9px 2px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cat-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.cat-grid-full {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .cat-grid-full {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.cat-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-picker-item:hover, .cat-picker-item:active {
+  border-color: var(--primary);
+  background: var(--bg-card-hover);
+}
+.debt-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.debt-action-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.debt-action-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+.debt-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.debt-action-icon.lend {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--income);
+}
+.debt-action-icon.borrow {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+.debt-quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.debt-quick-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.debt-quick-item:hover {
+  border-color: var(--primary);
+  background: var(--bg-card-hover);
+}
+.transfer-action-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.transfer-action-card:hover {
+  border-color: var(--primary);
+}
+.cat-manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cat-manager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}

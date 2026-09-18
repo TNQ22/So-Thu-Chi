@@ -18,26 +18,26 @@ db.version(1).stores({
 
 // Default Seed Categories
 const DEFAULT_CATEGORIES = [
-  // Chi tiêu (Expense)
-  { name: 'Ăn uống & Cà phê', type: 'expense', icon: 'utensils', color: '#f43f5e' },
-  { name: 'Đi chợ & Siêu thị', type: 'expense', icon: 'shopping-cart', color: '#fb7185' },
-  { name: 'Di chuyển & Xăng xe', type: 'expense', icon: 'car', color: '#f59e0b' },
-  { name: 'Hóa đơn & Tiện ích', type: 'expense', icon: 'zap', color: '#eab308' },
-  { name: 'Mua sắm cá nhân', type: 'expense', icon: 'shopping-bag', color: '#ec4899' },
-  { name: 'Nhà ở & Tiền thuê', type: 'expense', icon: 'home', color: '#8b5cf6' },
-  { name: 'Sức khỏe & Y tế', type: 'expense', icon: 'heart-pulse', color: '#10b981' },
-  { name: 'Giải trí & Du lịch', type: 'expense', icon: 'film', color: '#06b6d4' },
-  { name: 'Giáo dục & Khóa học', type: 'expense', icon: 'graduation-cap', color: '#3b82f6' },
-  { name: 'Gia đình & Con cái', type: 'expense', icon: 'users', color: '#6366f1' },
-  { name: 'Chi phí khác', type: 'expense', icon: 'more-horizontal', color: '#64748b' },
+  // Chi tiêu (Expense) - Quick items
+  { name: 'Ăn uống & Cà phê', type: 'expense', icon: 'utensils', color: '#f43f5e', isQuick: 1 },
+  { name: 'Đi chợ & Siêu thị', type: 'expense', icon: 'shopping-cart', color: '#fb7185', isQuick: 1 },
+  { name: 'Di chuyển & Xăng', type: 'expense', icon: 'car', color: '#f59e0b', isQuick: 1 },
+  { name: 'Hóa đơn & Điện nước', type: 'expense', icon: 'zap', color: '#eab308', isQuick: 1 },
+  { name: 'Mua sắm đồ dùng', type: 'expense', icon: 'shopping-bag', color: '#ec4899', isQuick: 1 },
+  { name: 'Nhà ở & Tiền thuê', type: 'expense', icon: 'home', color: '#8b5cf6', isQuick: 1 },
+  { name: 'Sức khỏe & Y tế', type: 'expense', icon: 'heart-pulse', color: '#10b981', isQuick: 1 },
+  { name: 'Giải trí & Phim ảnh', type: 'expense', icon: 'film', color: '#06b6d4', isQuick: 1 },
+  { name: 'Giáo dục & Khóa học', type: 'expense', icon: 'graduation-cap', color: '#3b82f6', isQuick: 1 },
+  { name: 'Gia đình & Con cái', type: 'expense', icon: 'users', color: '#6366f1', isQuick: 1 },
+  { name: 'Chi phí khác', type: 'expense', icon: 'more-horizontal', color: '#64748b', isQuick: 1 },
 
-  // Thu nhập (Income)
-  { name: 'Lương cố định', type: 'income', icon: 'banknote', color: '#10b981' },
-  { name: 'Thưởng & Hoa hồng', type: 'income', icon: 'award', color: '#059669' },
-  { name: 'Lợi nhuận đầu tư', type: 'income', icon: 'trending-up', color: '#0ea5e9' },
-  { name: 'Thu nhập phụ / Freelance', type: 'income', icon: 'briefcase', color: '#8b5cf6' },
-  { name: 'Quà tặng & Được cho', type: 'income', icon: 'gift', color: '#ec4899' },
-  { name: 'Thu nhập khác', type: 'income', icon: 'plus-circle', color: '#64748b' }
+  // Thu nhập (Income) - Quick items
+  { name: 'Lương cố định', type: 'income', icon: 'banknote', color: '#10b981', isQuick: 1 },
+  { name: 'Thưởng & Hoa hồng', type: 'income', icon: 'award', color: '#059669', isQuick: 1 },
+  { name: 'Lợi nhuận đầu tư', type: 'income', icon: 'trending-up', color: '#0ea5e9', isQuick: 1 },
+  { name: 'Thu nhập phụ', type: 'income', icon: 'briefcase', color: '#8b5cf6', isQuick: 0 },
+  { name: 'Quà tặng & Cho', type: 'income', icon: 'gift', color: '#ec4899', isQuick: 0 },
+  { name: 'Thu nhập khác', type: 'income', icon: 'plus-circle', color: '#64748b', isQuick: 0 }
 ];
 
 // Default Seed Accounts
@@ -53,6 +53,16 @@ async function initDatabase() {
   if (categoryCount === 0) {
     const now = Date.now();
     await db.categories.bulkAdd(DEFAULT_CATEGORIES.map(c => ({ ...c, isDeleted: 0, updatedAt: now })));
+  } else {
+    // Ensure existing categories have isQuick initialized
+    const cats = await db.categories.where('isDeleted').equals(0).toArray();
+    const hasQuick = cats.some(c => c.isQuick !== undefined);
+    if (!hasQuick) {
+      const now = Date.now();
+      for (let i = 0; i < cats.length; i++) {
+        await db.categories.update(cats[i].id, { isQuick: i < 14 ? 1 : 0, updatedAt: now });
+      }
+    }
   }
 
   const accountCount = await db.accounts.count();
@@ -76,9 +86,11 @@ async function initDatabase() {
 async function addTransaction(data) {
   const now = Date.now();
   const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const fee = Number(data.fee) || 0;
   const tx = {
     ...data,
     amount: Number(data.amount),
+    fee: fee,
     accountId: Number(data.accountId),
     toAccountId: data.toAccountId ? Number(data.toAccountId) : null,
     categoryId: data.categoryId ? Number(data.categoryId) : null,
@@ -88,6 +100,18 @@ async function addTransaction(data) {
     updatedAt: now
   };
 
+  // If user checked "Đi vay để trả khoản này", create linked borrow debt record
+  if (data.isBorrowed && data.borrowPerson) {
+    await addDebt({
+      type: 'borrow',
+      personName: data.borrowPerson.trim(),
+      originalAmount: tx.amount,
+      dueDate: data.borrowDueDate || null,
+      accountId: tx.accountId,
+      note: `Vay để chi trả: ${data.note || 'Khoản chi'}`
+    });
+  }
+
   await db.transaction('rw', db.transactions, db.accounts, async () => {
     // Add transaction
     await db.transactions.add(tx);
@@ -96,17 +120,17 @@ async function addTransaction(data) {
     if (tx.type === 'expense') {
       const acc = await db.accounts.get(tx.accountId);
       if (acc) {
-        await db.accounts.update(acc.id, { balance: acc.balance - tx.amount, updatedAt: now });
+        await db.accounts.update(acc.id, { balance: acc.balance - (tx.amount + fee), updatedAt: now });
       }
     } else if (tx.type === 'income') {
       const acc = await db.accounts.get(tx.accountId);
       if (acc) {
-        await db.accounts.update(acc.id, { balance: acc.balance + tx.amount, updatedAt: now });
+        await db.accounts.update(acc.id, { balance: acc.balance + (tx.amount - fee), updatedAt: now });
       }
     } else if (tx.type === 'transfer' && tx.toAccountId) {
       const fromAcc = await db.accounts.get(tx.accountId);
       const toAcc = await db.accounts.get(tx.toAccountId);
-      if (fromAcc) await db.accounts.update(fromAcc.id, { balance: fromAcc.balance - tx.amount, updatedAt: now });
+      if (fromAcc) await db.accounts.update(fromAcc.id, { balance: fromAcc.balance - (tx.amount + fee), updatedAt: now });
       if (toAcc) await db.accounts.update(toAcc.id, { balance: toAcc.balance + tx.amount, updatedAt: now });
     }
   });
@@ -121,17 +145,19 @@ async function deleteTransaction(txId) {
     const tx = await db.transactions.get(Number(txId));
     if (!tx || tx.isDeleted) return;
 
+    const fee = Number(tx.fee) || 0;
+
     // Rollback account balance
     if (tx.type === 'expense') {
       const acc = await db.accounts.get(tx.accountId);
-      if (acc) await db.accounts.update(acc.id, { balance: acc.balance + tx.amount, updatedAt: now });
+      if (acc) await db.accounts.update(acc.id, { balance: acc.balance + (tx.amount + fee), updatedAt: now });
     } else if (tx.type === 'income') {
       const acc = await db.accounts.get(tx.accountId);
-      if (acc) await db.accounts.update(acc.id, { balance: acc.balance - tx.amount, updatedAt: now });
+      if (acc) await db.accounts.update(acc.id, { balance: acc.balance - (tx.amount - fee), updatedAt: now });
     } else if (tx.type === 'transfer' && tx.toAccountId) {
       const fromAcc = await db.accounts.get(tx.accountId);
       const toAcc = await db.accounts.get(tx.toAccountId);
-      if (fromAcc) await db.accounts.update(fromAcc.id, { balance: fromAcc.balance + tx.amount, updatedAt: now });
+      if (fromAcc) await db.accounts.update(fromAcc.id, { balance: fromAcc.balance + (tx.amount + fee), updatedAt: now });
       if (toAcc) await db.accounts.update(toAcc.id, { balance: toAcc.balance - tx.amount, updatedAt: now });
     }
 
@@ -139,6 +165,40 @@ async function deleteTransaction(txId) {
     await db.transactions.update(tx.id, { isDeleted: 1, updatedAt: now });
   });
 
+  triggerAutoSync();
+}
+
+// Category Operations (CRUD)
+async function addCategory(data) {
+  const now = Date.now();
+  const id = await db.categories.add({
+    name: data.name.trim(),
+    type: data.type || 'expense',
+    icon: data.icon || 'tag',
+    color: data.color || '#6366f1',
+    isQuick: data.isQuick ? 1 : 0,
+    isDeleted: 0,
+    updatedAt: now
+  });
+  triggerAutoSync();
+  return id;
+}
+
+async function updateCategory(id, data) {
+  const now = Date.now();
+  await db.categories.update(Number(id), {
+    ...data,
+    updatedAt: now
+  });
+  triggerAutoSync();
+}
+
+async function deleteCategory(id) {
+  const now = Date.now();
+  await db.categories.update(Number(id), {
+    isDeleted: 1,
+    updatedAt: now
+  });
   triggerAutoSync();
 }
 
