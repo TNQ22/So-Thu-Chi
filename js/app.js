@@ -296,24 +296,14 @@ class App {
       window.UISettings.loadSettings();
     }
 
-    window.scrollTo({ top: 0, behavior: isTxPage ? 'instant' : 'smooth' });
-
-    // iOS 27 fix: force GPU repaint on tx-pages to clear any cached backdrop-filter
-    // artifact from the app-header compositing layer. Without this, the blur ghost
-    // stays until the user scrolls (which triggers a natural repaint).
-    if (isTxPage) {
-      const activeView = document.getElementById(`view-${viewId}`);
-      if (activeView) {
-        // Read a layout property to flush pending style changes
-        void activeView.offsetHeight;
-        // Apply and immediately remove a transform to trigger a new composite frame
-        activeView.style.transform = 'translateZ(0)';
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            activeView.style.transform = '';
-          });
-        });
-      }
+    const activeView = document.getElementById(`view-${viewId}`);
+    if (activeView) {
+      activeView.scrollTop = 0;
+    }
+    if (!isTxPage) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo(0, 0);
     }
   }
 
