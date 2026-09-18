@@ -188,6 +188,7 @@ class App {
 
   switchView(viewId) {
     if (!viewId) return;
+    if (window.UITransactions) window.UITransactions.closeModal();
     this.currentView = viewId;
 
     // Update active nav links

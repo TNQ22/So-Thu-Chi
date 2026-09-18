@@ -81,7 +81,7 @@ const UITransactions = {
     const display = document.getElementById('keypad-live-val');
     if (!modal || !input) return;
 
-    let cur = input.value.trim();
+    let cur = input.value.trim() || document.getElementById('tx-amount-text')?.textContent.trim() || '0';
     if (display) {
       display.textContent = cur || '0';
     }
@@ -97,12 +97,16 @@ const UITransactions = {
 
     let valStr = display ? display.textContent.trim() : '0';
     const evaluated = this.evaluateAmountExpression(valStr);
+    let finalFormatted = '0';
     if (evaluated !== null && evaluated > 0) {
-      input.value = new Intl.NumberFormat('vi-VN').format(evaluated);
+      finalFormatted = new Intl.NumberFormat('vi-VN').format(evaluated);
     } else {
       const raw = valStr.replace(/[^0-9]/g, '');
-      input.value = raw && Number(raw) > 0 ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '';
+      finalFormatted = raw && Number(raw) > 0 ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '0';
     }
+    input.value = finalFormatted;
+    const amountText = document.getElementById('tx-amount-text');
+    if (amountText) amountText.textContent = finalFormatted;
 
     modal.classList.remove('open');
   },
@@ -238,6 +242,10 @@ const UITransactions = {
     document.getElementById('tx-debt-subaction-input').value = '';
     document.getElementById('tx-linked-debt-id-input').value = '';
 
+    const typeSelector = document.getElementById('tx-type-selector');
+    if (typeSelector) typeSelector.value = cat.type;
+    this.updateAmountColor(cat.type);
+
     // Update UI badge
     const badge = document.getElementById('tx-type-badge');
     if (badge) {
@@ -258,8 +266,11 @@ const UITransactions = {
     if (subBox) subBox.textContent = cat.type === 'expense' ? 'Khoản chi tiêu từ ví' : 'Khoản thu nhập vào ví';
 
     // Form field adaptations
+    const catCard = document.getElementById('tx-category-section-card');
+    if (catCard) catCard.style.display = 'flex';
     document.getElementById('tx-debt-person-group').style.display = 'none';
-    document.getElementById('tx-debt-due-group').style.display = 'none';
+    const dueGroup = document.getElementById('tx-debt-due-group');
+    if (dueGroup) dueGroup.style.display = 'none';
     document.getElementById('tx-transfer-target-group').style.display = 'none';
     const accLabel = document.getElementById('tx-account-label');
     if (accLabel) {
@@ -283,12 +294,16 @@ const UITransactions = {
     const dueGroup = document.getElementById('tx-debt-due-group');
     const transferGroup = document.getElementById('tx-transfer-target-group');
     const accLabel = document.getElementById('tx-account-label');
+    const typeSelector = document.getElementById('tx-type-selector');
+    const catCard = document.getElementById('tx-category-section-card');
 
     transferGroup.style.display = 'none';
 
     if (subaction === 'lend') {
       document.getElementById('tx-type-input').value = 'lend';
       document.getElementById('tx-linked-debt-id-input').value = '';
+      if (typeSelector) typeSelector.value = 'lend';
+      this.updateAmountColor('lend');
       if (badge) { badge.className = 'badge-type lend'; badge.textContent = 'Cho Vay / Chi Hộ'; }
       if (iconBox) {
         iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
@@ -297,14 +312,17 @@ const UITransactions = {
       }
       if (nameBox) nameBox.textContent = 'Cho Vay / Chi Hộ';
       if (subBox) subBox.textContent = 'Cho người khác mượn tiền từ ví';
+      if (catCard) catCard.style.display = 'flex';
       personGroup.style.display = 'flex';
-      dueGroup.style.display = 'flex';
+      if (dueGroup) dueGroup.style.display = 'flex';
       document.getElementById('tx-debt-person-label').textContent = 'Người Vay / Chi Cho Ai';
       if (accLabel) accLabel.textContent = 'Trích Tiền Từ Ví';
 
     } else if (subaction === 'borrow') {
       document.getElementById('tx-type-input').value = 'borrow';
       document.getElementById('tx-linked-debt-id-input').value = '';
+      if (typeSelector) typeSelector.value = 'borrow';
+      this.updateAmountColor('borrow');
       if (badge) { badge.className = 'badge-type borrow'; badge.textContent = 'Đi Vay / Mượn Tiền'; }
       if (iconBox) {
         iconBox.style.background = 'rgba(245, 158, 11, 0.15)';
@@ -313,14 +331,17 @@ const UITransactions = {
       }
       if (nameBox) nameBox.textContent = 'Đi Vay / Mượn Tiền';
       if (subBox) subBox.textContent = 'Mượn tiền người khác nhập vào ví';
+      if (catCard) catCard.style.display = 'flex';
       personGroup.style.display = 'flex';
-      dueGroup.style.display = 'flex';
+      if (dueGroup) dueGroup.style.display = 'flex';
       document.getElementById('tx-debt-person-label').textContent = 'Chủ Nợ / Mượn Từ Ai';
       if (accLabel) accLabel.textContent = 'Cộng Tiền Vào Ví';
 
     } else if (subaction === 'debt-collect' && debtItem) {
       document.getElementById('tx-type-input').value = 'debt-collect';
       document.getElementById('tx-linked-debt-id-input').value = debtItem.id;
+      if (typeSelector) typeSelector.value = 'income';
+      this.updateAmountColor('income');
       if (badge) { badge.className = 'badge-type income'; badge.textContent = 'Thu Nợ'; }
       if (iconBox) {
         iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
@@ -330,15 +351,20 @@ const UITransactions = {
       if (nameBox) nameBox.textContent = `Thu Nợ: ${debtItem.personName}`;
       if (subBox) subBox.textContent = `Số dư còn nợ: ${new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount)}đ`;
       personGroup.style.display = 'none';
-      dueGroup.style.display = 'none';
+      if (dueGroup) dueGroup.style.display = 'none';
       if (accLabel) accLabel.textContent = 'Nhận Tiền Vào Ví';
-      document.getElementById('tx-amount-input').value = new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount);
+      const formattedRem = new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount);
+      document.getElementById('tx-amount-input').value = formattedRem;
+      const amountVal = document.getElementById('tx-amount-text');
+      if (amountVal) amountVal.textContent = formattedRem;
       document.getElementById('tx-note-input').value = `Thu nợ từ ${debtItem.personName}`;
       showToast(`Đã chọn thu nợ từ: ${debtItem.personName}`, 'info');
 
     } else if (subaction === 'debt-pay' && debtItem) {
       document.getElementById('tx-type-input').value = 'debt-pay';
       document.getElementById('tx-linked-debt-id-input').value = debtItem.id;
+      if (typeSelector) typeSelector.value = 'expense';
+      this.updateAmountColor('expense');
       if (badge) { badge.className = 'badge-type warning'; badge.textContent = 'Trả Nợ'; }
       if (iconBox) {
         iconBox.style.background = 'rgba(245, 158, 11, 0.15)';
@@ -348,9 +374,12 @@ const UITransactions = {
       if (nameBox) nameBox.textContent = `Trả Nợ: ${debtItem.personName}`;
       if (subBox) subBox.textContent = `Số tiền cần trả: ${new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount)}đ`;
       personGroup.style.display = 'none';
-      dueGroup.style.display = 'none';
+      if (dueGroup) dueGroup.style.display = 'none';
       if (accLabel) accLabel.textContent = 'Trích Tiền Trả Nợ Từ Ví';
-      document.getElementById('tx-amount-input').value = new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount);
+      const formattedRem = new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount);
+      document.getElementById('tx-amount-input').value = formattedRem;
+      const amountVal = document.getElementById('tx-amount-text');
+      if (amountVal) amountVal.textContent = formattedRem;
       document.getElementById('tx-note-input').value = `Trả nợ cho ${debtItem.personName}`;
       showToast(`Đã chọn trả nợ cho: ${debtItem.personName}`, 'info');
     }
@@ -364,6 +393,10 @@ const UITransactions = {
     document.getElementById('tx-category-id-input').value = '';
     document.getElementById('tx-debt-subaction-input').value = '';
     document.getElementById('tx-linked-debt-id-input').value = '';
+
+    const typeSelector = document.getElementById('tx-type-selector');
+    if (typeSelector) typeSelector.value = 'transfer';
+    this.updateAmountColor('transfer');
 
     const badge = document.getElementById('tx-type-badge');
     if (badge) { badge.className = 'badge-type transfer'; badge.textContent = 'Chuyển Tiền'; }
@@ -379,8 +412,9 @@ const UITransactions = {
     if (nameBox) nameBox.textContent = 'Chuyển Tiền Giữa Các Ví';
     if (subBox) subBox.textContent = 'Chuyển khoản nội bộ giữa 2 tài khoản';
 
+    const catCard = document.getElementById('tx-category-section-card');
+    if (catCard) catCard.style.display = 'none';
     document.getElementById('tx-debt-person-group').style.display = 'none';
-    document.getElementById('tx-debt-due-group').style.display = 'none';
     document.getElementById('tx-transfer-target-group').style.display = 'flex';
     const accLabel = document.getElementById('tx-account-label');
     if (accLabel) accLabel.textContent = 'Trích Từ Ví';
@@ -646,19 +680,196 @@ const UITransactions = {
   },
 
   /* ==================== OPEN ADD / EDIT MODAL ==================== */
+  openModal(defaultType = 'expense') {
+    const modal = document.getElementById('modal-transaction');
+    if (modal && modal.classList.contains('open')) {
+      this.closeModal();
+    } else {
+      this.openAddModal(defaultType);
+    }
+  },
+
+  updateAmountColor(type) {
+    const amountVal = document.getElementById('tx-amount-text');
+    if (!amountVal) return;
+    const colors = {
+      expense: '#f43f5e',
+      income: '#10b981',
+      lend: '#10b981',
+      borrow: '#f59e0b',
+      transfer: '#0ea5e9',
+      adjust: '#8b5cf6'
+    };
+    amountVal.style.color = colors[type] || '#f43f5e';
+  },
+
+  async handleHeaderTypeChange(type) {
+    this.updateAmountColor(type);
+    const selector = document.getElementById('tx-type-selector');
+    if (selector) selector.value = type;
+
+    if (type === 'expense') {
+      const defaultCat = await db.categories.where('type').equals('expense').first();
+      if (defaultCat) this.selectCategory(defaultCat);
+    } else if (type === 'income') {
+      const defaultCat = await db.categories.where('type').equals('income').first();
+      if (defaultCat) this.selectCategory(defaultCat);
+    } else if (type === 'lend') {
+      this.selectDebtAction('lend');
+    } else if (type === 'borrow') {
+      this.selectDebtAction('borrow');
+    } else if (type === 'transfer') {
+      this.selectTransferAction();
+    } else if (type === 'adjust') {
+      this.selectAdjustAction();
+    }
+  },
+
+  selectAdjustAction() {
+    document.getElementById('tx-type-input').value = 'adjust';
+    document.getElementById('tx-category-id-input').value = '';
+    document.getElementById('tx-debt-subaction-input').value = '';
+    document.getElementById('tx-linked-debt-id-input').value = '';
+    this.updateAmountColor('adjust');
+
+    const catCard = document.getElementById('tx-category-section-card');
+    if (catCard) catCard.style.display = 'none';
+    const personGroup = document.getElementById('tx-debt-person-group');
+    if (personGroup) personGroup.style.display = 'none';
+    const transferGroup = document.getElementById('tx-transfer-target-group');
+    if (transferGroup) transferGroup.style.display = 'none';
+
+    const noteInput = document.getElementById('tx-note-input');
+    if (noteInput && !noteInput.value) {
+      noteInput.value = 'Điều chỉnh số dư ví';
+    }
+  },
+
+  toggleHayDung() {
+    const grid = document.getElementById('tx-quick-category-grid');
+    const chevron = document.getElementById('haydung-chevron');
+    if (!grid) return;
+    const isHidden = grid.style.display === 'none';
+    if (isHidden) {
+      grid.style.display = 'grid';
+      if (chevron) chevron.style.transform = 'rotate(0deg)';
+    } else {
+      grid.style.display = 'none';
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+  },
+
+  formatDateTimeDisplay(dateStr, timeStr) {
+    try {
+      let d;
+      if (dateStr) {
+        const [y, m, day] = dateStr.split('-').map(Number);
+        const [h, min] = (timeStr || '00:00').split(':').map(Number);
+        d = new Date(y, m - 1, day, h || 0, min || 0);
+      } else {
+        d = new Date();
+      }
+      const dayOfWeek = d.getDay();
+      const dayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+      const dayText = dayNames[dayOfWeek];
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dayText} - ${dd}/${mm}/${yyyy}  ${hh}:${min}`;
+    } catch (e) {
+      return `${dateStr || ''} ${timeStr || ''}`;
+    }
+  },
+
+  handleNativeDateTimeChange(val) {
+    if (!val) return;
+    const [d, t] = val.split('T');
+    if (d) document.getElementById('tx-date-input').value = d;
+    if (t) document.getElementById('tx-time-input').value = t;
+    const display = document.getElementById('tx-datetime-display');
+    if (display) {
+      display.textContent = this.formatDateTimeDisplay(d, t);
+    }
+  },
+
+  openDateTimePicker() {
+    const native = document.getElementById('tx-datetime-native');
+    if (native) {
+      if (typeof native.showPicker === 'function') {
+        try { native.showPicker(); } catch (e) { native.focus(); }
+      } else {
+        native.focus();
+      }
+    }
+  },
+
+  async updateSelectedAccountDisplay() {
+    const fromSelect = document.getElementById('tx-account-select');
+    const bubble = document.getElementById('tx-account-icon-bubble');
+    if (!fromSelect || !bubble) return;
+    const accId = Number(fromSelect.value);
+    if (!accId) return;
+    const acc = await db.accounts.get(accId);
+    if (acc) {
+      const iconMap = {
+        cash: { icon: 'wallet', color: '#10b981' },
+        bank: { icon: 'landmark', color: '#4f46e5' },
+        ewallet: { icon: 'smartphone', color: '#ec4899' },
+        credit: { icon: 'credit-card', color: '#f59e0b' },
+        saving: { icon: 'piggy-bank', color: '#0ea5e9' }
+      };
+      const info = iconMap[acc.type] || { icon: acc.icon || 'wallet', color: acc.color || '#4f46e5' };
+      bubble.innerHTML = `<i data-lucide="${info.icon}" style="width: 18px; height: 18px;"></i>`;
+      bubble.style.background = `${info.color}22`;
+      bubble.style.color = info.color;
+      if (window.lucide) lucide.createIcons();
+    }
+  },
+
+  openHistoryView() {
+    this.closeModal();
+    if (window.app) {
+      window.app.switchView('transactions');
+    }
+  },
+
+  submitForm() {
+    const hiddenBtn = document.getElementById('btn-submit-tx');
+    if (hiddenBtn) {
+      hiddenBtn.click();
+    } else {
+      this.handleFormSubmit();
+    }
+  },
+
   async openAddModal(defaultType = 'expense') {
     const modal = document.getElementById('modal-transaction');
-    const title = document.getElementById('modal-tx-title');
     const form = document.getElementById('transaction-form');
     if (!modal || !form) return;
 
     form.reset();
     document.getElementById('tx-id-input').value = '';
-    document.getElementById('tx-amount-input').value = '';
-    document.getElementById('tx-date-input').value = new Date().toISOString().split('T')[0];
+    document.getElementById('tx-amount-input').value = '0';
+    const amountVal = document.getElementById('tx-amount-text');
+    if (amountVal) amountVal.textContent = '0';
+
     const now = new Date();
-    document.getElementById('tx-time-input').value = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
-    if (title) title.textContent = 'Ghi Chép Mới';
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+    document.getElementById('tx-date-input').value = dateStr;
+    document.getElementById('tx-time-input').value = timeStr;
+
+    const nativeDt = document.getElementById('tx-datetime-native');
+    if (nativeDt) nativeDt.value = `${dateStr}T${timeStr}`;
+
+    const dtDisplay = document.getElementById('tx-datetime-display');
+    if (dtDisplay) dtDisplay.textContent = this.formatDateTimeDisplay(dateStr, timeStr);
+
+    const typeSelector = document.getElementById('tx-type-selector');
+    if (typeSelector) typeSelector.value = defaultType;
+    this.updateAmountColor(defaultType);
 
     // Reset extra details
     document.getElementById('extra-details-body').style.display = 'none';
@@ -666,15 +877,27 @@ const UITransactions = {
     document.getElementById('tx-is-borrowed-checkbox').checked = false;
     document.getElementById('tx-fee-input').value = '';
 
-    await this.populateAccounts();
+    // Show category card by default
+    const catCard = document.getElementById('tx-category-section-card');
+    if (catCard) catCard.style.display = 'flex';
 
-    // Default to top expense category
+    // Hay dung default open
+    const haydungGrid = document.getElementById('tx-quick-category-grid');
+    if (haydungGrid) haydungGrid.style.display = 'grid';
+    const chevron = document.getElementById('haydung-chevron');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+
+    await this.populateAccounts();
+    await this.updateSelectedAccountDisplay();
+
+    // Default to top category for defaultType
     const defaultCat = await db.categories.where('type').equals(defaultType).first();
     if (defaultCat) {
       this.selectCategory(defaultCat);
     }
 
     modal.classList.add('open');
+    if (window.lucide) lucide.createIcons();
   },
 
   closeModal() {
@@ -691,7 +914,10 @@ const UITransactions = {
     const subaction = document.getElementById('tx-debt-subaction-input').value;
     const linkedDebtId = document.getElementById('tx-linked-debt-id-input').value;
 
-    const amountInput = document.getElementById('tx-amount-input').value;
+    let amountInput = document.getElementById('tx-amount-input').value;
+    if (!amountInput || amountInput === '0') {
+      amountInput = document.getElementById('tx-amount-text')?.textContent || '0';
+    }
     const evaluatedAmount = this.evaluateAmountExpression(amountInput) || Number(amountInput.replace(/\./g, ''));
 
     if (!evaluatedAmount || evaluatedAmount <= 0) {
@@ -719,6 +945,38 @@ const UITransactions = {
     if (isBorrowed && !borrowPerson) {
       showToast('Vui lòng nhập tên người cho mượn tiền', 'error');
       return;
+    }
+
+    // 0. Adjust Account Balance
+    if (type === 'adjust') {
+      const acc = await db.accounts.get(Number(accountId));
+      if (acc) {
+        const diff = evaluatedAmount - acc.balance;
+        const adjustType = diff >= 0 ? 'income' : 'expense';
+        const absDiff = Math.abs(diff);
+        if (absDiff > 0) {
+          await db.transactions.add({
+            type: adjustType,
+            amount: absDiff,
+            accountId: Number(accountId),
+            date,
+            time,
+            note: note || 'Điều chỉnh số dư ví',
+            fee: 0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            isDeleted: 0
+          });
+        }
+        await db.accounts.update(Number(accountId), {
+          balance: evaluatedAmount,
+          updatedAt: Date.now()
+        });
+        this.closeModal();
+        showToast('Đã điều chỉnh số dư thành công', 'success');
+        window.app.refreshAll();
+        return;
+      }
     }
 
     // 1. Transfer validation
@@ -985,14 +1243,27 @@ const UITransactions = {
     if (!tx || tx.isDeleted) return;
 
     const modal = document.getElementById('modal-transaction');
-    const title = document.getElementById('modal-tx-title');
     if (!modal) return;
 
-    if (title) title.textContent = 'Chi Tiết Ghi Chép';
     document.getElementById('tx-id-input').value = tx.id;
-    document.getElementById('tx-amount-input').value = new Intl.NumberFormat('vi-VN').format(tx.amount);
+    const formattedAmount = new Intl.NumberFormat('vi-VN').format(tx.amount);
+    document.getElementById('tx-amount-input').value = formattedAmount;
+    const amountVal = document.getElementById('tx-amount-text');
+    if (amountVal) amountVal.textContent = formattedAmount;
+
     document.getElementById('tx-date-input').value = tx.date;
-    document.getElementById('tx-time-input').value = tx.time || '';
+    document.getElementById('tx-time-input').value = tx.time || '00:00';
+
+    const nativeDt = document.getElementById('tx-datetime-native');
+    if (nativeDt) nativeDt.value = `${tx.date}T${tx.time || '00:00'}`;
+
+    const dtDisplay = document.getElementById('tx-datetime-display');
+    if (dtDisplay) dtDisplay.textContent = this.formatDateTimeDisplay(tx.date, tx.time);
+
+    const typeSelector = document.getElementById('tx-type-selector');
+    if (typeSelector) typeSelector.value = tx.type;
+    this.updateAmountColor(tx.type);
+
     document.getElementById('tx-note-input').value = tx.note || '';
 
     // Fee
@@ -1000,6 +1271,7 @@ const UITransactions = {
     if (feeInput) feeInput.value = tx.fee ? new Intl.NumberFormat('vi-VN').format(tx.fee) : '';
 
     await this.populateAccounts(tx.accountId, tx.toAccountId);
+    await this.updateSelectedAccountDisplay();
 
     if (tx.type === 'transfer') {
       this.selectTransferAction();
@@ -1009,6 +1281,7 @@ const UITransactions = {
     }
 
     modal.classList.add('open');
+    if (window.lucide) lucide.createIcons();
   }
 };
 

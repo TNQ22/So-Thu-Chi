@@ -433,41 +433,63 @@
 
   <!-- ==================== MODALS ==================== -->
 
-  <!-- Modal: Add / Edit Transaction -->
+  <!-- Modal: Add / Edit Transaction (Full Height on Mobile above Bottom Nav) -->
   <div id="modal-transaction" class="modal-overlay">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <h3 id="modal-tx-title" class="modal-title">Ghi Chép Mới</h3>
-          <span id="tx-type-badge" class="badge-type expense">Chi Tiêu</span>
+    <div class="modal-dialog tx-fullscreen-dialog">
+      <!-- Custom Header: History Icon (Left), Type Dropdown (Center), Check/Done & Close (Right) -->
+      <div class="modal-header tx-modal-header">
+        <div class="tx-header-left">
+          <button type="button" class="btn-icon tx-header-btn" onclick="UITransactions.openHistoryView()" title="Lịch sử ghi chép">
+            <i data-lucide="history" style="width: 20px; height: 20px; color: var(--text-secondary);"></i>
+          </button>
         </div>
-        <button type="button" class="btn-icon" onclick="UITransactions.closeModal()"><i data-lucide="x"></i></button>
+
+        <div class="tx-header-center">
+          <div class="tx-type-pill-select-wrapper">
+            <select id="tx-type-selector" class="tx-type-pill-select" onchange="UITransactions.handleHeaderTypeChange(this.value)">
+              <option value="expense">Chi tiền</option>
+              <option value="income">Thu tiền</option>
+              <option value="lend">Cho vay</option>
+              <option value="borrow">Đi vay</option>
+              <option value="transfer">Chuyển khoản</option>
+              <option value="adjust">Điều chỉnh số dư</option>
+            </select>
+            <i data-lucide="chevron-down" class="tx-type-pill-chevron"></i>
+          </div>
+        </div>
+
+        <div class="tx-header-right">
+          <button type="button" class="btn-icon tx-header-btn tx-header-done-btn" onclick="UITransactions.submitForm()" title="Hoàn thành">
+            <i data-lucide="check" style="width: 20px; height: 20px;"></i>
+          </button>
+          <button type="button" class="btn-icon tx-header-btn" onclick="UITransactions.closeModal()" title="Đóng">
+            <i data-lucide="x" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+          </button>
+        </div>
       </div>
-      <form id="transaction-form">
+
+      <form id="transaction-form" onsubmit="UITransactions.handleFormSubmit(event)">
         <input type="hidden" id="tx-id-input">
         <input type="hidden" id="tx-type-input" value="expense">
         <input type="hidden" id="tx-category-id-input" value="">
         <input type="hidden" id="tx-debt-subaction-input" value="">
         <input type="hidden" id="tx-linked-debt-id-input" value="">
+        <input type="hidden" id="tx-amount-input" value="0" required>
+        <input type="hidden" id="tx-date-input" required>
+        <input type="hidden" id="tx-time-input" required>
 
-        <div class="modal-body">
-          <!-- Large Amount Input with Keypad Trigger -->
-          <div class="form-group">
-            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-              <span>Số Tiền (VNĐ)</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">Bấm để mở bàn phím tính tiền</span>
-            </label>
-            <div class="money-input-wrapper" id="tx-amount-click-trigger" style="cursor: pointer;" onclick="UITransactions.openKeypad()">
-              <input type="text" id="tx-amount-input" class="form-control money-input-lg" placeholder="0" required inputmode="none" readonly style="cursor: pointer;">
-              <span class="money-currency-tag">₫</span>
-              <button type="button" id="btn-open-keypad" class="btn-icon keypad-trigger-btn" title="Mở bàn phím số" onclick="UITransactions.openKeypad(); event.stopPropagation();">
-                <i data-lucide="calculator" style="width: 22px; height: 22px; color: var(--primary);"></i>
-              </button>
+        <div class="modal-body tx-modal-body">
+          <!-- Ô 1: SỐ TIỀN Ở GIỮA -->
+          <div class="tx-section-card tx-amount-card" onclick="UITransactions.openKeypad()">
+            <div class="tx-amount-centered-display">
+              <span id="tx-amount-text" class="tx-amount-val">0</span>
+              <span class="tx-amount-cur">₫</span>
             </div>
           </div>
 
-          <!-- Selected Category Card (Click to open full picker) -->
-          <div class="form-group">
+          <!-- Ô 2: DANH MỤC & MỤC HAY DÙNG (BỌC LẠI 1 KHUNG) -->
+          <div class="tx-section-card tx-category-card" id="tx-category-section-card">
+            <!-- Hạng mục đã chọn (Bấm để xem tất cả) -->
             <div class="category-selected-row" id="tx-selected-category-card" onclick="UITransactions.openCategoryPicker()">
               <div class="category-selected-left">
                 <div id="tx-selected-cat-icon" class="category-icon-bubble" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">
@@ -475,105 +497,120 @@
                 </div>
                 <div>
                   <div id="tx-selected-cat-name" style="font-weight: 600; font-size: 0.95rem;">Ăn uống & Cà phê</div>
-                  <div id="tx-selected-cat-subtext" style="font-size: 0.75rem; color: var(--text-muted);">Bấm để xem tất cả danh mục & vay nợ</div>
+                  <div id="tx-selected-cat-subtext" style="font-size: 0.75rem; color: var(--text-muted);">Bấm để xem tất cả danh mục</div>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px; color: var(--text-muted);">
-                <span style="font-size: 0.8rem; font-weight: 500;">Xem tất cả</span>
-                <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+              <i data-lucide="chevron-right" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+            </div>
+
+            <!-- Hay Dùng (Listdown / Accordion, Mặc định mở sẵn) -->
+            <div class="tx-haydung-container" id="tx-haydung-container">
+              <div class="tx-haydung-header">
+                <button type="button" class="tx-haydung-toggle-btn" onclick="UITransactions.toggleHayDung()">
+                  <span style="font-weight: 600; font-size: 0.85rem;">Hay dùng</span>
+                  <i id="haydung-chevron" data-lucide="chevron-up" style="width: 14px; height: 14px; transition: transform 0.2s;"></i>
+                </button>
+                <button type="button" class="btn-icon" style="width: 28px; height: 28px; border-radius: var(--radius-sm);" onclick="UITransactions.openCategoryManager()" title="Sửa danh mục">
+                  <i data-lucide="settings-2" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+                </button>
+              </div>
+              <div id="tx-quick-category-grid" class="quick-category-grid">
+                <!-- Rendered dynamically (2x4 fixed: 6 cats + Cho Vay + Đi Vay) -->
               </div>
             </div>
           </div>
 
-          <!-- Quick Category Grid (2x4 Fixed Icon Chips) -->
-          <div class="form-group" id="tx-quick-category-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <label class="form-label" style="margin-bottom: 0; font-weight: 600;">Hay dùng</label>
-              <button type="button" class="btn-icon" style="width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border-color);" onclick="UITransactions.openCategoryManager()" title="Sửa danh mục">
-                <i data-lucide="settings-2" style="width: 15px; height: 15px; color: var(--text-secondary);"></i>
-              </button>
-            </div>
-            <div id="tx-quick-category-grid" class="quick-category-grid">
-              <!-- Rendered dynamically -->
-            </div>
-          </div>
-
-          <!-- Debt / Loan Extra Fields -->
-          <div id="tx-debt-person-group" class="form-group" style="display: none;">
-            <label id="tx-debt-person-label" class="form-label">Người Vay / Chi Cho Ai</label>
+          <!-- Extra Debt Fields if Lend / Borrow / Adjust -->
+          <div id="tx-debt-person-group" class="tx-section-card" style="display: none;">
+            <label id="tx-debt-person-label" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Người Vay / Chi Cho Ai</label>
             <input type="text" id="tx-person-input" class="form-control" placeholder="Ví dụ: Anh Nam, Bạn Lan...">
-          </div>
-
-          <div id="tx-debt-due-group" class="form-group" style="display: none;">
-            <label class="form-label">Hạn Trả (Tùy chọn)</label>
-            <input type="date" id="tx-due-date-input" class="form-control">
-          </div>
-
-          <!-- Source Account -->
-          <div class="form-group">
-            <label id="tx-account-label" class="form-label">Tài Khoản / Ví Trích Tiền</label>
-            <select id="tx-account-select" class="form-control" required></select>
-          </div>
-
-          <!-- Destination Account (for Transfer) -->
-          <div id="tx-transfer-target-group" class="form-group" style="display: none;">
-            <label class="form-label">Chuyển Đến Ví</label>
-            <select id="tx-to-account-select" class="form-control"></select>
-          </div>
-
-          <!-- Date & Time Row -->
-          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px;">
-            <div class="form-group">
-              <label class="form-label">Ngày Giao Dịch</label>
-              <input type="date" id="tx-date-input" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Giờ</label>
-              <input type="time" id="tx-time-input" class="form-control" required>
+            <div id="tx-debt-due-group" style="margin-top: 8px;">
+              <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Hạn Trả (Tùy chọn)</label>
+              <input type="date" id="tx-due-date-input" class="form-control">
             </div>
           </div>
 
-          <!-- Note -->
-          <div class="form-group">
-            <label class="form-label">Ghi Chú</label>
-            <input type="text" id="tx-note-input" class="form-control" placeholder="Ví dụ: Ăn trưa với đồng nghiệp...">
-          </div>
-
-          <!-- Collapsible "Thêm Chi Tiết" (Phí & Đi vay để trả) -->
-          <div class="collapsible-section">
-            <button type="button" id="btn-toggle-extra-details" class="collapsible-header-btn" onclick="UITransactions.toggleExtraDetails()">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <i data-lucide="sliders-horizontal" style="width: 15px; height: 15px; color: var(--primary);"></i>
-                <span style="font-weight: 600; font-size: 0.85rem;">Thêm Chi Tiết (Phí, Vay tiền để trả...)</span>
+          <!-- Ô 3: THÔNG TIN VÍ - NGÀY GIỜ - GHI CHÚ (BAO QUÁT BỌC LẠI 1 KHUNG) -->
+          <div class="tx-section-card tx-details-card">
+            <!-- Hàng 1: Tài khoản / Ví trích tiền (kèm icon trực quan) -->
+            <div class="tx-info-row" id="tx-account-row">
+              <div class="tx-info-icon-bubble" id="tx-account-icon-bubble">
+                <i data-lucide="wallet"></i>
               </div>
-              <i id="extra-details-chevron" data-lucide="chevron-down" style="width: 16px; height: 16px; transition: transform 0.2s;"></i>
-            </button>
-            <div id="extra-details-body" class="collapsible-body" style="display: none;">
-              <!-- Phí giao dịch -->
-              <div class="form-group" style="margin-top: 10px;">
-                <label class="form-label">Phí Giao Dịch (VNĐ - nếu có)</label>
-                <input type="text" id="tx-fee-input" class="form-control" placeholder="0" inputmode="numeric">
-                <span style="font-size: 0.72rem; color: var(--text-muted);">Sẽ tự động cộng thêm vào số tiền trừ từ ví nguồn</span>
+              <div class="tx-info-content">
+                <select id="tx-account-select" class="tx-clean-select" required onchange="UITransactions.updateSelectedAccountDisplay()"></select>
               </div>
+              <i data-lucide="chevron-right" class="tx-info-chevron"></i>
+            </div>
 
-              <!-- Đi vay để trả khoản này -->
-              <div class="borrow-checkbox-box" style="margin-top: 10px;">
-                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                  <input type="checkbox" id="tx-is-borrowed-checkbox" onchange="UITransactions.toggleBorrowFields()" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
-                  <div>
-                    <div style="font-weight: 600; font-size: 0.88rem;">Đi vay / Mượn tiền để trả khoản này</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Tự động tạo một khoản nợ phải trả trong Sổ Vay Nợ</div>
-                  </div>
-                </label>
+            <!-- Hàng chuyển đến ví (khi là chuyển khoản) -->
+            <div class="tx-info-row" id="tx-transfer-target-group" style="display: none;">
+              <div class="tx-info-icon-bubble" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
+                <i data-lucide="arrow-right-left"></i>
+              </div>
+              <div class="tx-info-content">
+                <select id="tx-to-account-select" class="tx-clean-select"></select>
+              </div>
+              <i data-lucide="chevron-right" class="tx-info-chevron"></i>
+            </div>
 
-                <div id="borrow-fields-expand" style="display: none; margin-top: 10px; padding-left: 28px; flex-direction: column; gap: 8px;">
-                  <div class="form-group">
-                    <label class="form-label">Vay từ ai?</label>
-                    <input type="text" id="tx-borrow-person-input" class="form-control" placeholder="Tên chủ nợ / người cho mượn">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Hạn trả (tùy chọn)</label>
-                    <input type="date" id="tx-borrow-due-date-input" class="form-control">
+            <!-- Hàng 2: Ngày & Giờ (Biểu tượng lịch - Thứ X - DD/MM/YYYY  HH:MM) -->
+            <div class="tx-info-row" id="tx-datetime-row" onclick="UITransactions.openDateTimePicker()">
+              <div class="tx-info-icon-bubble" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">
+                <i data-lucide="calendar"></i>
+              </div>
+              <div class="tx-info-content" style="position: relative;">
+                <span id="tx-datetime-display" class="tx-datetime-display">Thứ 5 - 18/09/2026  09:20</span>
+                <input type="datetime-local" id="tx-datetime-native" class="tx-datetime-native-input" onchange="UITransactions.handleNativeDateTimeChange(this.value)">
+              </div>
+              <i data-lucide="chevron-right" class="tx-info-chevron"></i>
+            </div>
+
+            <!-- Hàng 3: Ghi chú -->
+            <div class="tx-info-row" id="tx-note-row">
+              <div class="tx-info-icon-bubble" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">
+                <i data-lucide="file-text"></i>
+              </div>
+              <div class="tx-info-content">
+                <input type="text" id="tx-note-input" class="tx-clean-input" placeholder="Ghi chú (tùy chọn)...">
+              </div>
+            </div>
+
+            <!-- Mục Thêm Chi Tiết (Phí, Đi vay để trả) -->
+            <div class="collapsible-section" style="margin-top: 4px; padding-top: 6px;">
+              <button type="button" id="btn-toggle-extra-details" class="collapsible-header-btn" onclick="UITransactions.toggleExtraDetails()">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="sliders-horizontal" style="width: 14px; height: 14px; color: var(--primary);"></i>
+                  <span style="font-weight: 500; font-size: 0.8rem;">Thêm Chi Tiết (Phí, Đi vay để trả...)</span>
+                </div>
+                <i id="extra-details-chevron" data-lucide="chevron-down" style="width: 15px; height: 15px; transition: transform 0.2s;"></i>
+              </button>
+              <div id="extra-details-body" class="collapsible-body" style="display: none;">
+                <!-- Phí giao dịch -->
+                <div class="form-group" style="margin-top: 8px;">
+                  <label class="form-label" style="font-size: 0.78rem;">Phí Giao Dịch (VNĐ - nếu có)</label>
+                  <input type="text" id="tx-fee-input" class="form-control" placeholder="0" inputmode="numeric">
+                </div>
+
+                <!-- Đi vay để trả khoản này -->
+                <div class="borrow-checkbox-box" style="margin-top: 8px;">
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="tx-is-borrowed-checkbox" onchange="UITransactions.toggleBorrowFields()" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
+                    <div>
+                      <div style="font-weight: 600; font-size: 0.85rem;">Đi vay / Mượn tiền để trả khoản này</div>
+                      <div style="font-size: 0.72rem; color: var(--text-muted);">Tự động tạo khoản nợ phải trả trong Sổ Vay Nợ</div>
+                    </div>
+                  </label>
+
+                  <div id="borrow-fields-expand" style="display: none; margin-top: 8px; padding-left: 28px; flex-direction: column; gap: 8px;">
+                    <div class="form-group">
+                      <label class="form-label" style="font-size: 0.78rem;">Vay từ ai?</label>
+                      <input type="text" id="tx-borrow-person-input" class="form-control" placeholder="Tên chủ nợ / người cho mượn">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size: 0.78rem;">Hạn trả (tùy chọn)</label>
+                      <input type="date" id="tx-borrow-due-date-input" class="form-control">
+                    </div>
                   </div>
                 </div>
               </div>
@@ -581,10 +618,7 @@
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="UITransactions.closeModal()">Hủy</button>
-          <button type="submit" class="btn-primary">Lưu Giao Dịch</button>
-        </div>
+        <button type="submit" id="btn-submit-tx" style="display: none;"></button>
       </form>
     </div>
   </div>

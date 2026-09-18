@@ -1203,7 +1203,12 @@ input, textarea, select, button {
     font-size: 1.2rem;
   }
 
-  /* Modal on mobile becomes a Bottom Sheet */
+  .mobile-bottom-nav {
+    display: flex;
+    z-index: 120;
+  }
+
+  /* Modal on mobile becomes a Bottom Sheet by default */
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -1215,6 +1220,34 @@ input, textarea, select, button {
     max-height: 90dvh;
     padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
     animation: slideUpBottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Modal Ghi Chép Mới: Full screen pushed to top, docked right above fixed bottom nav */
+  #modal-transaction {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottom-nav-height) + max(6px, env(safe-area-inset-bottom, 0px)));
+    z-index: 100;
+    padding: 0;
+    align-items: stretch;
+    background: var(--bg-main);
+  }
+
+  #modal-transaction .modal-dialog {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    transform: none;
+    padding-bottom: 0;
+    animation: none;
+    display: flex;
+    flex-direction: column;
   }
 
   @keyframes slideUpBottom {
@@ -1242,6 +1275,286 @@ input, textarea, select, button {
 /* ==========================================================================
    ADVANCED TRANSACTION UI & QUICK CATEGORY SYSTEM
    ========================================================================== */
+
+/* Header of Transaction Modal */
+.tx-modal-header {
+  padding: 10px 14px;
+  padding-top: max(10px, env(safe-area-inset-top, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tx-header-left, .tx-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tx-header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.tx-header-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tx-header-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary);
+}
+
+.tx-header-done-btn {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.tx-header-done-btn:hover {
+  background: var(--primary-hover);
+}
+
+/* Center Type Pill Select */
+.tx-type-pill-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tx-type-pill-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 30px 6px 14px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.tx-type-pill-select:focus, .tx-type-pill-select:hover {
+  border-color: var(--primary);
+}
+
+.tx-type-pill-chevron {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
+
+/* Form and Modal Body Scrolling */
+#transaction-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tx-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 3 Visual Section Cards */
+.tx-section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Ô 1: SỐ TIỀN Ở GIỮA */
+.tx-amount-card {
+  padding: 12px 14px;
+  text-align: center;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.02) 100%);
+  user-select: none;
+}
+
+.tx-amount-card:hover, .tx-amount-card:active {
+  border-color: var(--primary);
+}
+
+.tx-amount-centered-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.tx-amount-val {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #f43f5e;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  transition: color 0.2s ease;
+}
+
+.tx-amount-cur {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Ô 2: DANH MỤC & HAY DÙNG */
+.tx-category-card {
+  gap: 8px;
+}
+
+.tx-category-card .category-selected-row {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tx-haydung-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 8px;
+}
+
+.tx-haydung-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tx-haydung-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+/* Ô 3: THÔNG TIN VÍ - NGÀY GIỜ - GHI CHÚ */
+.tx-details-card {
+  gap: 0;
+  padding: 4px 12px;
+}
+
+.tx-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tx-info-row:last-of-type {
+  border-bottom: none;
+}
+
+.tx-info-icon-bubble {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(79, 70, 229, 0.15);
+  color: var(--primary);
+  transition: all 0.2s ease;
+}
+
+.tx-info-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.tx-clean-select, .tx-clean-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.tx-clean-input {
+  cursor: text;
+}
+
+.tx-clean-select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.tx-datetime-display {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.tx-datetime-native-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tx-info-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
 
 /* Keypad Trigger Button in Money Input */
 .keypad-trigger-btn {
