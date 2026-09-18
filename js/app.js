@@ -257,16 +257,11 @@ class App {
     if (titleEl) titleEl.textContent = titles[viewId] || 'Sổ Thu Chi';
 
     // Update browser history:
-    // Fixed primary menu tabs use replaceState so they NEVER create a back-history stack.
-    // Sub-pages (new-transaction, category-picker, borrow-select) use pushState to support back gesture.
-    if (!isBack && window.history) {
-      if (isPrimary) {
-        window.history.replaceState({ view: viewId }, '', `#${viewId}`);
-      } else {
-        if (window.history.state?.view !== viewId) {
-          window.history.pushState({ view: viewId }, '', `#${viewId}`);
-        }
-      }
+    // Use replaceState for ALL views so the history stack never grows.
+    // This prevents the browser from firing popstate during our custom swipe gesture.
+    // Back navigation is handled 100% by goBack() and the swipe handler — not the browser.
+    if (window.history) {
+      window.history.replaceState({ view: viewId }, '', `#${viewId}`);
     }
 
     // Refresh specific view data
@@ -321,21 +316,24 @@ class App {
   }
 
   setupPopstateListener() {
+    // Since we use replaceState for all views, popstate should NOT fire during normal navigation.
+    // This listener only handles the Android hardware back button press.
     window.addEventListener('popstate', (e) => {
-      this.isBackTransitioning = true;
-      setTimeout(() => { this.isBackTransitioning = false; }, 350);
-
-      const targetView = e.state?.view || (location.hash ? location.hash.replace('#', '') : 'dashboard');
-      if (targetView === this.currentView) return;
-
-      const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
-      // Fixed primary tabs NEVER jump between each other on back navigation
-      if (primaryViews.includes(this.currentView) && primaryViews.includes(targetView)) {
+      if (this.isBackTransitioning) {
+        // Already handling a back transition — block this duplicate event
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
         return;
       }
 
-      this.switchView(targetView, true);
+      const subPages = ['new-transaction', 'category-picker', 'borrow-select'];
+      if (subPages.includes(this.currentView)) {
+        // Hardware back button pressed while on a sub-page → go back via JS
+        window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
+        this.goBack();
+      } else {
+        // Hardware back button on a primary tab → restore state, do nothing
+        window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
+      }
     });
   }
 
@@ -426,14 +424,9 @@ class App {
             page.style.transform = '';
             page.style.opacity = '';
             page.style.transition = '';
-            // Only trigger transition if not already transitioned via native edge swipe
-            if (this.currentView === swipedView) {
-              if (swipedView === 'category-picker' || swipedView === 'borrow-select') {
-                this.switchView('new-transaction', true);
-              } else if (swipedView === 'new-transaction') {
-                this.goBack();
-              }
-            }
+            // Since we use replaceState (no pushState), there's no popstate race.
+            // Just call goBack() directly — it will do the right thing based on currentView.
+            this.goBack();
           }, 220);
         } else {
           // Snap back
