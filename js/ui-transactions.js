@@ -74,6 +74,14 @@ const UITransactions = {
           menu.style.display = 'none';
         }
       }
+      // Close account dropdown when clicking outside
+      const accMenu = document.getElementById('tx-account-dropdown-menu');
+      const accRow = document.getElementById('tx-account-row');
+      if (accMenu && accMenu.style.display === 'block') {
+        if (!accMenu.contains(e.target) && !accRow?.contains(e.target)) {
+          this.closeAccountDropdown();
+        }
+      }
     });
 
     // Transaction form submit
@@ -984,21 +992,74 @@ const UITransactions = {
   async populateAccounts(selectedFromId = null, selectedToId = null) {
     const fromSelect = document.getElementById('tx-account-select');
     const toSelect = document.getElementById('tx-to-account-select');
+    const dropdownList = document.getElementById('tx-account-dropdown-list');
     if (!fromSelect) return;
 
     const accounts = await db.accounts.where('isDeleted').equals(0).toArray();
-    const options = accounts.map(a => `
-      <option value="${a.id}">
-        ${a.name} (${new Intl.NumberFormat('vi-VN').format(a.balance)}đ)
-      </option>
-    `).join('');
+    const iconMap = {
+      cash: { icon: 'wallet', color: '#10b981' },
+      bank: { icon: 'landmark', color: '#4f46e5' },
+      ewallet: { icon: 'smartphone', color: '#ec4899' },
+      credit: { icon: 'credit-card', color: '#f59e0b' },
+      saving: { icon: 'piggy-bank', color: '#0ea5e9' }
+    };
 
+    // Populate hidden native select for form reading
+    const options = accounts.map(a =>
+      `<option value="${a.id}">${a.name}</option>`
+    ).join('');
     fromSelect.innerHTML = options;
     if (toSelect) toSelect.innerHTML = options;
 
     if (selectedFromId) fromSelect.value = selectedFromId;
     if (selectedToId && toSelect) toSelect.value = selectedToId;
+
+    // Populate custom dropdown list with icons
+    if (dropdownList) {
+      dropdownList.innerHTML = accounts.map(a => {
+        const info = iconMap[a.type] || { icon: 'wallet', color: '#4f46e5' };
+        const bal = new Intl.NumberFormat('vi-VN').format(a.balance);
+        return `
+          <div class="tx-account-option" data-id="${a.id}" data-name="${a.name}" data-type="${a.type || 'cash'}" onclick="UITransactions.selectAccount(${a.id}, '${a.name}', '${a.type || 'cash'}')"
+               style="${String(selectedFromId) === String(a.id) ? 'background:rgba(255,255,255,0.08);' : ''}">
+            <div class="tx-info-icon-bubble" style="background:${info.color}22; color:${info.color}; width:32px; height:32px; flex-shrink:0;">
+              <i data-lucide="${info.icon}" style="width:16px;height:16px;"></i>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:0.9rem; font-weight:600; color:var(--text-primary);">${a.name}</div>
+              <div style="font-size:0.78rem; color:var(--text-muted);">${bal}đ</div>
+            </div>
+            ${String(selectedFromId) === String(a.id) ? '<i data-lucide="check" style="width:16px;height:16px;color:var(--primary);"></i>' : ''}
+          </div>`;
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+    }
   },
+
+  toggleAccountDropdown(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('tx-account-dropdown-menu');
+    const chevron = document.getElementById('tx-account-chevron');
+    if (!menu) return;
+    const isOpen = menu.style.display === 'block';
+    menu.style.display = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  },
+
+  closeAccountDropdown() {
+    const menu = document.getElementById('tx-account-dropdown-menu');
+    const chevron = document.getElementById('tx-account-chevron');
+    if (menu) menu.style.display = 'none';
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+  },
+
+  selectAccount(id, name, type) {
+    const fromSelect = document.getElementById('tx-account-select');
+    if (fromSelect) fromSelect.value = id;
+    this.closeAccountDropdown();
+    this.updateSelectedAccountDisplay();
+  },
+
 
   /* ==================== OPEN ADD / EDIT VIEW ==================== */
   openModal(defaultType = 'expense') {
@@ -1145,6 +1206,7 @@ const UITransactions = {
   async updateSelectedAccountDisplay() {
     const fromSelect = document.getElementById('tx-account-select');
     const bubble = document.getElementById('tx-account-icon-bubble');
+    const label = document.getElementById('tx-account-label');
     if (!fromSelect || !bubble) return;
     const accId = Number(fromSelect.value);
     if (!accId) return;
@@ -1161,6 +1223,7 @@ const UITransactions = {
       bubble.innerHTML = `<i data-lucide="${info.icon}" style="width: 18px; height: 18px;"></i>`;
       bubble.style.background = `${info.color}22`;
       bubble.style.color = info.color;
+      if (label) label.textContent = acc.name;
       if (window.lucide) lucide.createIcons();
     }
   },

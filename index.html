@@ -503,15 +503,21 @@
 
               <!-- Ô 3: THÔNG TIN VÍ - NGÀY GIỜ - GHI CHÚ (CỐ ĐỊNH, KHÔNG BẬT CHUYỂN VÍ) -->
               <div class="tx-section-card tx-details-card">
-                <!-- Hàng 1: Tài khoản / Ví trích tiền (kèm icon trực quan) -->
-                <div class="tx-info-row" id="tx-account-row">
+                <!-- Hàng 1: Tài khoản / Ví trích tiền (custom dropdown inline) -->
+                <div class="tx-info-row tx-account-dropdown-wrapper" id="tx-account-row" onclick="UITransactions.toggleAccountDropdown(event)">
                   <div class="tx-info-icon-bubble" id="tx-account-icon-bubble">
                     <i data-lucide="wallet"></i>
                   </div>
                   <div class="tx-info-content">
-                    <select id="tx-account-select" class="tx-clean-select" required onchange="UITransactions.updateSelectedAccountDisplay()"></select>
+                    <span id="tx-account-label" style="font-size:0.92rem; font-weight:600; color:var(--text-primary);">Chọn tài khoản</span>
+                    <!-- Hidden native select for form submission -->
+                    <select id="tx-account-select" required style="display:none;"></select>
                   </div>
-                  <i data-lucide="chevron-right" class="tx-info-chevron"></i>
+                  <i data-lucide="chevron-down" class="tx-info-chevron" id="tx-account-chevron"></i>
+                </div>
+                <!-- Account dropdown list (inline, no page navigation) -->
+                <div id="tx-account-dropdown-menu" style="display:none;">
+                  <div id="tx-account-dropdown-list" class="tx-account-list"></div>
                 </div>
 
                 <!-- Hàng 2: Ngày & Giờ (Ngày lề trái, Giờ căn lề phải tách biệt) -->

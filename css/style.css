@@ -290,7 +290,12 @@ body.view-borrow-select .app-header,
 body:has(#view-new-transaction.active) .app-header,
 body:has(#view-category-picker.active) .app-header,
 body:has(#view-borrow-select.active) .app-header {
-  display: none !important;
+  /* Use visibility+opacity instead of display:none to prevent iOS backdrop-filter shadow artifact */
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: fixed !important;
+  top: -200px !important;
 }
 
 .header-left {
@@ -1235,7 +1240,11 @@ body:has(#view-borrow-select.active) .app-header {
   body.view-new-transaction .app-header,
   body.view-category-picker .app-header,
   body.view-borrow-select .app-header {
-    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: fixed !important;
+    top: -200px !important;
   }
 
   .tx-page-view {
@@ -1418,7 +1427,7 @@ body:has(#view-borrow-select.active) .app-header {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  animation: fadeIn 0.15s ease-out;
+  /* No animation - appear instantly */
 }
 
 .tx-type-option {
@@ -1712,6 +1721,46 @@ body:has(#view-borrow-select.active) .app-header {
 .tx-clean-select option {
   background: var(--bg-surface);
   color: var(--text-primary);
+}
+
+/* Custom Account Dropdown */
+.tx-account-dropdown-wrapper {
+  cursor: pointer;
+  user-select: none;
+}
+
+#tx-account-dropdown-menu {
+  border-top: 1px solid var(--border-color);
+  padding: 4px 0;
+}
+
+.tx-account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px;
+}
+
+.tx-account-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.tx-account-option:hover,
+.tx-account-option:active {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+#tx-account-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .tx-datetime-display {
