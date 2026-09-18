@@ -770,8 +770,7 @@ body:has(#view-borrow-select.active) .app-header {
   right: 0;
   bottom: 0;
   background: var(--bg-modal);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  /* No backdrop-filter — causes iOS GPU layer artifacts */
   z-index: 100;
   display: flex;
   align-items: center;
@@ -1998,9 +1997,8 @@ body:has(#view-borrow-select.active) .app-header {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+  /* No backdrop-filter — causes iOS GPU layer artifacts */
 }
 .keypad-popup-sheet {
   position: relative;
