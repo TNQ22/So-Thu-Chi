@@ -290,12 +290,14 @@ body.view-borrow-select .app-header,
 body:has(#view-new-transaction.active) .app-header,
 body:has(#view-category-picker.active) .app-header,
 body:has(#view-borrow-select.active) .app-header {
-  /* Use visibility+opacity instead of display:none to prevent iOS backdrop-filter shadow artifact */
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: fixed !important;
-  top: -200px !important;
+  /* iOS 27 fix: clear ALL compositing properties before hiding
+     backdrop-filter creates a GPU layer that persists even with display:none */
+  display: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .header-left {
@@ -1240,11 +1242,12 @@ body:has(#view-borrow-select.active) .app-header {
   body.view-new-transaction .app-header,
   body.view-category-picker .app-header,
   body.view-borrow-select .app-header {
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    position: fixed !important;
-    top: -200px !important;
+    display: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 
   .tx-page-view {
@@ -1290,13 +1293,15 @@ body:has(#view-borrow-select.active) .app-header {
   width: 100%;
   margin: 0 auto;
   position: relative;
-  will-change: transform;
+  /* No will-change here — GPU layer causes iOS backdrop-filter ghost shadow.
+     Only promote during active swipe gesture via .swiping class. */
   touch-action: pan-y;
   user-select: none;
   box-sizing: border-box;
 }
 
 .tx-page-view.swiping {
+  will-change: transform;
   transition: none !important;
 }
 
