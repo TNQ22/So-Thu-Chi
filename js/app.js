@@ -42,11 +42,11 @@ function showToast(message, type = 'info') {
 class App {
   constructor() {
     this.currentView = 'dashboard';
+    this.previousView = 'dashboard';
     this.isPrivacyMode = false;
   }
 
   async init() {
-    // 1. Initialize IndexedDB
     // 0. Render icons immediately
     if (window.lucide) lucide.createIcons();
 
@@ -69,26 +69,32 @@ class App {
     // 4. Setup Routing & Navigation
     this.setupNavigation();
 
-    // 5. Setup Global Shortcuts & Listeners
+    // 5. Setup Touch Swipe Gestures (Swipe from left to right to go back)
+    this.setupSwipeToBack();
+
+    // 6. Setup Global Shortcuts & Listeners
     this.setupGlobalShortcuts();
 
-    // 6. Apply Saved Theme & Privacy Mode
+    // 7. Apply Saved Theme & Privacy Mode
     await this.loadInitialPreferences();
 
-    // 7. Render initial data
+    // 8. Render initial data
     await this.refreshAll();
 
     // Render icons again after dynamic DOM render
     if (window.lucide) lucide.createIcons();
 
-    // 8. Register Service Worker for PWA
+    // 9. Register Service Worker for PWA
     this.registerServiceWorker();
 
-    // 9. Sync indicator listener
+    // 10. Sync indicator listener
     this.setupSyncListeners();
 
-    // 10. Check URL query action (e.g. ?action=new-tx or ?tab=debts)
+    // 11. Check URL query action (e.g. ?action=new-tx or ?tab=debts)
     this.handleUrlActions();
+
+    // 12. Setup Browser History (Popstate) listener
+    this.setupPopstateListener();
 
     console.log('Sổ Thu Chi PWA đã khởi động sẵn sàng!');
   }
@@ -186,10 +192,15 @@ class App {
     }
   }
 
-  switchView(viewId) {
+  switchView(viewId, isBack = false) {
     if (!viewId) return;
-    if (window.UITransactions) window.UITransactions.closeModal();
+    if (this.currentView !== viewId && this.currentView !== 'new-transaction') {
+      this.previousView = this.currentView;
+    }
     this.currentView = viewId;
+
+    // Toggle body class for view-specific styles
+    document.body.classList.toggle('view-new-transaction', viewId === 'new-transaction');
 
     // Update active nav links
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -203,7 +214,13 @@ class App {
 
     // Show/hide view pages
     document.querySelectorAll('.page-view').forEach(page => {
-      page.classList.toggle('active', page.id === `view-${viewId}`);
+      const isActive = page.id === `view-${viewId}`;
+      page.classList.toggle('active', isActive);
+      if (page.id === 'view-new-transaction') {
+        page.style.transform = '';
+        page.style.opacity = '';
+        page.style.transition = '';
+      }
     });
 
     // Update Header title
@@ -214,10 +231,18 @@ class App {
       accounts: 'Tài Khoản & Ví Tiền',
       budgets: 'Hạn Mức Ngân Sách',
       analytics: 'Báo Cáo & Phân Tích',
-      settings: 'Cài Đặt & Đồng Bộ'
+      settings: 'Cài Đặt & Đồng Bộ',
+      'new-transaction': 'Ghi Chép Mới'
     };
     const titleEl = document.getElementById('header-page-title');
     if (titleEl) titleEl.textContent = titles[viewId] || 'Sổ Thu Chi';
+
+    // Push history state if supported and not already in back navigation
+    if (!isBack && window.history && window.history.pushState) {
+      if (window.history.state?.view !== viewId) {
+        window.history.pushState({ view: viewId }, '', `#${viewId}`);
+      }
+    }
 
     // Refresh specific view data
     if (viewId === 'dashboard') {
@@ -239,6 +264,122 @@ class App {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  goBack() {
+    if (window.UITransactions) {
+      window.UITransactions.closeKeypad();
+      window.UITransactions.closeCategoryPicker();
+    }
+    const target = (this.previousView && this.previousView !== 'new-transaction') ? this.previousView : 'dashboard';
+    this.switchView(target, true);
+  }
+
+  setupPopstateListener() {
+    window.addEventListener('popstate', (e) => {
+      const targetView = e.state?.view || (location.hash ? location.hash.replace('#', '') : 'dashboard');
+      this.switchView(targetView, true);
+    });
+  }
+
+  setupSwipeToBack() {
+    const page = document.getElementById('view-new-transaction');
+    if (!page) return;
+
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let deltaX = 0;
+    let deltaY = 0;
+    let startTime = 0;
+    let isSwiping = false;
+    let canSwipe = false;
+
+    page.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      const target = e.target;
+      // Skip if inside open keypad or category modal
+      if (target.closest('#modal-keypad.open') || target.closest('#modal-category-picker.open') || target.closest('#modal-category-manager.open')) {
+        canSwipe = false;
+        return;
+      }
+      // Skip if touching interactive input/select/button
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
+        canSwipe = false;
+        return;
+      }
+
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      currentX = startX;
+      deltaX = 0;
+      deltaY = 0;
+      startTime = Date.now();
+      isSwiping = false;
+
+      // Allow swipe starting from left area of screen
+      canSwipe = (startX <= window.innerWidth * 0.4 || startX <= 140);
+    }, { passive: true });
+
+    page.addEventListener('touchmove', (e) => {
+      if (!canSwipe || e.touches.length !== 1) return;
+      currentX = e.touches[0].clientX;
+      deltaX = currentX - startX;
+      deltaY = e.touches[0].clientY - startY;
+
+      // Only handle drag towards right
+      if (deltaX > 8) {
+        // Horizontal gesture priority
+        if (Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+          isSwiping = true;
+          page.classList.add('swiping');
+          const translateX = Math.max(0, deltaX);
+          page.style.transform = `translateX(${translateX}px)`;
+          const progress = Math.min(translateX / (window.innerWidth * 0.7), 1);
+          page.style.opacity = `${1 - progress * 0.25}`;
+        }
+      }
+    }, { passive: true });
+
+    const handleTouchEnd = () => {
+      if (!isSwiping) {
+        canSwipe = false;
+        return;
+      }
+      isSwiping = false;
+      canSwipe = false;
+      page.classList.remove('swiping');
+
+      const duration = Date.now() - startTime;
+      const velocity = deltaX / Math.max(duration, 1);
+      const threshold = Math.min(window.innerWidth * 0.25, 80);
+
+      // Trigger back if past threshold or quick flick
+      if (deltaX > threshold || (deltaX > 35 && velocity > 0.3)) {
+        page.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease';
+        page.style.transform = 'translateX(100%)';
+        page.style.opacity = '0';
+        setTimeout(() => {
+          this.goBack();
+          page.style.transform = '';
+          page.style.opacity = '';
+          page.style.transition = '';
+        }, 220);
+      } else {
+        // Snap back
+        page.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease';
+        page.style.transform = 'translateX(0)';
+        page.style.opacity = '1';
+        setTimeout(() => {
+          page.style.transform = '';
+          page.style.opacity = '';
+          page.style.transition = '';
+        }, 200);
+      }
+    };
+
+    page.addEventListener('touchend', handleTouchEnd, { passive: true });
+    page.addEventListener('touchcancel', handleTouchEnd, { passive: true });
   }
 
   setupGlobalShortcuts() {

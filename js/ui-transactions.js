@@ -679,11 +679,10 @@ const UITransactions = {
     if (selectedToId && toSelect) toSelect.value = selectedToId;
   },
 
-  /* ==================== OPEN ADD / EDIT MODAL ==================== */
+  /* ==================== OPEN ADD / EDIT VIEW ==================== */
   openModal(defaultType = 'expense') {
-    const modal = document.getElementById('modal-transaction');
-    if (modal && modal.classList.contains('open')) {
-      this.closeModal();
+    if (window.app && window.app.currentView === 'new-transaction') {
+      window.app.goBack();
     } else {
       this.openAddModal(defaultType);
     }
@@ -845,9 +844,8 @@ const UITransactions = {
   },
 
   async openAddModal(defaultType = 'expense') {
-    const modal = document.getElementById('modal-transaction');
     const form = document.getElementById('transaction-form');
-    if (!modal || !form) return;
+    if (!form) return;
 
     form.reset();
     document.getElementById('tx-id-input').value = '';
@@ -896,15 +894,18 @@ const UITransactions = {
       this.selectCategory(defaultCat);
     }
 
-    modal.classList.add('open');
+    if (window.app) {
+      window.app.switchView('new-transaction');
+    }
     if (window.lucide) lucide.createIcons();
   },
 
   closeModal() {
-    const modal = document.getElementById('modal-transaction');
-    if (modal) modal.classList.remove('open');
     this.closeKeypad();
     this.closeCategoryPicker();
+    if (window.app && window.app.currentView === 'new-transaction') {
+      window.app.goBack();
+    }
   },
 
   /* ==================== FORM SUBMIT ==================== */
@@ -1237,13 +1238,10 @@ const UITransactions = {
     if (window.lucide) lucide.createIcons();
   },
 
-  /* ==================== EDIT MODAL ==================== */
+  /* ==================== EDIT VIEW ==================== */
   async openEditModal(txId) {
     const tx = await db.transactions.get(Number(txId));
     if (!tx || tx.isDeleted) return;
-
-    const modal = document.getElementById('modal-transaction');
-    if (!modal) return;
 
     document.getElementById('tx-id-input').value = tx.id;
     const formattedAmount = new Intl.NumberFormat('vi-VN').format(tx.amount);
@@ -1280,7 +1278,11 @@ const UITransactions = {
       if (cat) this.selectCategory(cat);
     }
 
-    modal.classList.add('open');
+    if (window.app) {
+      window.app.switchView('new-transaction');
+      const titleEl = document.getElementById('header-page-title');
+      if (titleEl) titleEl.textContent = 'Chỉnh Sửa Ghi Chép';
+    }
     if (window.lucide) lucide.createIcons();
   }
 };
