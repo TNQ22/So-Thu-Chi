@@ -1255,6 +1255,10 @@ body:has(#view-borrow-select.active) .app-header {
     max-width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box;
+    background: var(--bg-base) !important;
+    isolation: isolate;
+    /* Ensure full screen cover — no transparent gap at top that iOS can blur through */
+    min-height: 100dvh;
   }
 
   .tx-page-card-wrapper {
@@ -1293,8 +1297,10 @@ body:has(#view-borrow-select.active) .app-header {
   width: 100%;
   margin: 0 auto;
   position: relative;
-  /* No will-change here — GPU layer causes iOS backdrop-filter ghost shadow.
-     Only promote during active swipe gesture via .swiping class. */
+  /* Solid background prevents iOS from showing any blur artifact from layers below */
+  background: var(--bg-base);
+  /* isolation:isolate creates a new stacking context, blocking compositing bleed-through */
+  isolation: isolate;
   touch-action: pan-y;
   user-select: none;
   box-sizing: border-box;
@@ -1322,13 +1328,17 @@ body:has(#view-borrow-select.active) .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-surface);
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
   gap: 8px;
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 20;
+  /* iOS 27: prevent backdrop-filter ghost by using solid opaque background.
+     No backdrop-filter here — solid color only. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .tx-header-left {
