@@ -764,12 +764,14 @@ input, textarea, select, button {
   padding: 16px;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .modal-overlay.open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .modal-dialog {
@@ -1290,15 +1292,17 @@ input, textarea, select, button {
   flex-shrink: 0;
 }
 
-/* Quick Category Grid (~4 Rows of Chips) */
+/* Quick Category Grid (2x4 Fixed Grid) */
 .quick-category-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, 64px);
   gap: 8px;
 }
 @media (max-width: 480px) {
   .quick-category-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, 62px);
     gap: 6px;
   }
 }
@@ -1307,7 +1311,7 @@ input, textarea, select, button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 4px;
+  padding: 6px 4px;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -1315,6 +1319,10 @@ input, textarea, select, button {
   gap: 4px;
   transition: all 0.15s ease;
   user-select: none;
+  min-width: 0; /* Crucial for text-overflow ellipsis inside CSS Grid columns */
+  overflow: hidden;
+  height: 100%;
+  box-sizing: border-box;
 }
 .quick-cat-chip:hover {
   border-color: var(--primary);
@@ -1326,12 +1334,13 @@ input, textarea, select, button {
   box-shadow: 0 0 0 1px var(--primary);
 }
 .quick-cat-icon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .quick-cat-name {
   font-size: 0.72rem;
@@ -1341,7 +1350,10 @@ input, textarea, select, button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
   max-width: 100%;
+  padding: 0 2px;
+  display: block;
 }
 .quick-cat-chip.manage-btn {
   border-style: dashed;

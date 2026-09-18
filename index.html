@@ -414,7 +414,30 @@
       </a>
       
       <!-- Central Floating Action Button -->
-      <div id="fab-add-tx" class="m  <!-- Modal: Add / Edit Transaction -->
+      <div id="fab-add-tx" class="mobile-nav-item fab-item">
+        <button class="fab-btn" onclick="UITransactions.openModal()" title="Thêm giao dịch mới">
+          <i data-lucide="plus"></i>
+        </button>
+      </div>
+
+      <a href="#" class="mobile-nav-item" data-view="debts">
+        <i data-lucide="hand-coins" style="width: 20px; height: 20px;"></i>
+        <span>Sổ nợ</span>
+      </a>
+      <a href="#" class="mobile-nav-item" data-view="accounts">
+        <i data-lucide="wallet" style="width: 20px; height: 20px;"></i>
+        <span>Tài khoản</span>
+      </a>
+      <a href="#" class="mobile-nav-item" data-view="settings">
+        <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
+        <span>Cài đặt</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal: Add / Edit Transaction -->
   <div id="modal-transaction" class="modal-overlay">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -466,10 +489,10 @@
             </div>
           </div>
 
-          <!-- Quick Category Grid (~4 Rows of Icon Chips) -->
+          <!-- Quick Category Grid (2x4 Fixed Icon Chips) -->
           <div class="form-group" id="tx-quick-category-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" style="margin-bottom: 0;">Chọn Nhanh Danh Mục</label>
+              <label class="form-label" style="margin-bottom: 0;">Chọn Nhanh Danh Mục (2x4)</label>
               <button type="button" class="btn-text-action" onclick="UITransactions.openCategoryManager()">
                 <i data-lucide="settings-2" style="width: 13px; height: 13px;"></i> Sửa danh mục nhanh
               </button>
@@ -799,25 +822,8 @@
         <div id="cat-manager-list" class="cat-manager-list"></div>
       </div>
     </div>
-  </div>abel class="form-label">Giờ</label>
-              <input type="time" id="tx-time-input" class="form-control" required>
-            </div>
-          </div>
-
-          <!-- Note -->
-          <div class="form-group">
-            <label class="form-label">Ghi Chú</label>
-            <input type="text" id="tx-note-input" class="form-control" placeholder="Ví dụ: Ăn trưa với đồng nghiệp...">
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="UITransactions.closeModal()">Hủy</button>
-          <button type="submit" class="btn-primary">Lưu Giao Dịch</button>
-        </div>
-      </form>
-    </div>
   </div>
+
 
   <!-- Modal: Add Debt Record -->
   <div id="modal-debt" class="modal-overlay">

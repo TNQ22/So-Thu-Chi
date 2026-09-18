@@ -178,7 +178,7 @@ const UITransactions = {
     return null;
   },
 
-  /* ==================== QUICK CATEGORY GRID (~4 ROWS) ==================== */
+  /* ==================== QUICK CATEGORY GRID (2x4 FIXED) ==================== */
   async renderQuickCategories() {
     const container = document.getElementById('tx-quick-category-grid');
     if (!container) return;
@@ -186,34 +186,33 @@ const UITransactions = {
     const allCats = await db.categories.where('isDeleted').equals(0).toArray();
     let quickCats = allCats.filter(c => c.isQuick === 1);
     if (quickCats.length === 0) {
-      quickCats = allCats.slice(0, 12);
+      quickCats = allCats.slice(0, 5);
+    } else {
+      quickCats = quickCats.slice(0, 5);
     }
-
-    // Cap at 13 so with Lend, Borrow, and Manage we have exactly 16 chips (4x4)
-    quickCats = quickCats.slice(0, 13);
 
     let html = '';
     for (const cat of quickCats) {
       const isSelected = this.selectedCategory && this.selectedCategory.id === cat.id;
       html += `
-        <div class="quick-cat-chip ${isSelected ? 'active' : ''}" onclick="UITransactions.selectCategoryById(${cat.id})">
+        <div class="quick-cat-chip ${isSelected ? 'active' : ''}" onclick="UITransactions.selectCategoryById(${cat.id})" title="${escapeHTML(cat.name)}">
           <div class="quick-cat-icon" style="background: ${cat.color}22; color: ${cat.color};">
             <i data-lucide="${cat.icon || 'tag'}" style="width: 16px; height: 16px;"></i>
           </div>
-          <span class="quick-cat-name">${escapeHTML(cat.name.split('&')[0].trim())}</span>
+          <span class="quick-cat-name">${escapeHTML(cat.name)}</span>
         </div>
       `;
     }
 
-    // Add quick Cho Vay & Đi Vay chips
+    // Fixed Cho Vay, Đi Vay, and Sửa... chips to complete exactly 2x4 (8 slots total)
     html += `
-      <div class="quick-cat-chip" onclick="UITransactions.selectDebtAction('lend')">
+      <div class="quick-cat-chip" onclick="UITransactions.selectDebtAction('lend')" title="Cho Vay">
         <div class="quick-cat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--income);">
           <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
         </div>
         <span class="quick-cat-name">Cho Vay</span>
       </div>
-      <div class="quick-cat-chip" onclick="UITransactions.selectDebtAction('borrow')">
+      <div class="quick-cat-chip" onclick="UITransactions.selectDebtAction('borrow')" title="Đi Vay">
         <div class="quick-cat-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--warning);">
           <i data-lucide="arrow-down-left" style="width: 16px; height: 16px;"></i>
         </div>
