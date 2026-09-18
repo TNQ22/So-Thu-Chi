@@ -186,9 +186,9 @@ const UITransactions = {
     const allCats = await db.categories.where('isDeleted').equals(0).toArray();
     let quickCats = allCats.filter(c => c.isQuick === 1);
     if (quickCats.length === 0) {
-      quickCats = allCats.slice(0, 5);
+      quickCats = allCats.slice(0, 6);
     } else {
-      quickCats = quickCats.slice(0, 5);
+      quickCats = quickCats.slice(0, 6);
     }
 
     let html = '';
@@ -204,7 +204,7 @@ const UITransactions = {
       `;
     }
 
-    // Fixed Cho Vay, Đi Vay, and Sửa... chips to complete exactly 2x4 (8 slots total)
+    // Fixed Cho Vay & Đi Vay chips to complete exactly 2x4 (8 slots total)
     html += `
       <div class="quick-cat-chip" onclick="UITransactions.selectDebtAction('lend')" title="Cho Vay">
         <div class="quick-cat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--income);">
@@ -217,12 +217,6 @@ const UITransactions = {
           <i data-lucide="arrow-down-left" style="width: 16px; height: 16px;"></i>
         </div>
         <span class="quick-cat-name">Đi Vay</span>
-      </div>
-      <div class="quick-cat-chip manage-btn" onclick="UITransactions.openCategoryManager()" title="Sửa danh mục nhanh">
-        <div class="quick-cat-icon" style="background: rgba(255,255,255,0.06); color: var(--text-muted);">
-          <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i>
-        </div>
-        <span class="quick-cat-name">Sửa...</span>
       </div>
     `;
 

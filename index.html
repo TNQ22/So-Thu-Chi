@@ -408,9 +408,9 @@
         <i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
         <span>Tổng quan</span>
       </a>
-      <a href="#" class="mobile-nav-item" data-view="transactions">
-        <i data-lucide="receipt" style="width: 20px; height: 20px;"></i>
-        <span>Giao dịch</span>
+      <a href="#" class="mobile-nav-item" data-view="accounts">
+        <i data-lucide="wallet" style="width: 20px; height: 20px;"></i>
+        <span>Tài khoản</span>
       </a>
       
       <!-- Central Floating Action Button -->
@@ -420,13 +420,9 @@
         </button>
       </div>
 
-      <a href="#" class="mobile-nav-item" data-view="debts">
-        <i data-lucide="hand-coins" style="width: 20px; height: 20px;"></i>
-        <span>Sổ nợ</span>
-      </a>
-      <a href="#" class="mobile-nav-item" data-view="accounts">
-        <i data-lucide="wallet" style="width: 20px; height: 20px;"></i>
-        <span>Tài khoản</span>
+      <a href="#" class="mobile-nav-item" data-view="budgets">
+        <i data-lucide="piggy-bank" style="width: 20px; height: 20px;"></i>
+        <span>Ngân sách</span>
       </a>
       <a href="#" class="mobile-nav-item" data-view="settings">
         <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
@@ -491,10 +487,10 @@
 
           <!-- Quick Category Grid (2x4 Fixed Icon Chips) -->
           <div class="form-group" id="tx-quick-category-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" style="margin-bottom: 0;">Chọn Nhanh Danh Mục (2x4)</label>
-              <button type="button" class="btn-text-action" onclick="UITransactions.openCategoryManager()">
-                <i data-lucide="settings-2" style="width: 13px; height: 13px;"></i> Sửa danh mục nhanh
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" style="margin-bottom: 0; font-weight: 600;">Hay dùng</label>
+              <button type="button" class="btn-icon" style="width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border-color);" onclick="UITransactions.openCategoryManager()" title="Sửa danh mục">
+                <i data-lucide="settings-2" style="width: 15px; height: 15px; color: var(--text-secondary);"></i>
               </button>
             </div>
             <div id="tx-quick-category-grid" class="quick-category-grid">
