@@ -359,6 +359,41 @@ body:has(#view-borrow-select.active) .app-header {
   box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45);
 }
 
+.header-add-icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.tx-submit-bottom-btn {
+  width: 100%;
+  padding: 13px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tx-submit-bottom-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45);
+}
+
+.tx-submit-bottom-btn:active {
+  transform: translateY(0);
+}
+
 .btn-secondary {
   display: inline-flex;
   align-items: center;
