@@ -42,7 +42,7 @@ function showToast(message, type = 'info') {
 class App {
   constructor() {
     this.currentView = 'dashboard';
-    this.previousView = 'dashboard';
+    this.activePrimaryView = 'dashboard'; // ONLY updated when user taps a primary nav tab
     this.isPrivacyMode = false;
     this.isBackTransitioning = false;
   }
@@ -163,7 +163,10 @@ class App {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const view = link.dataset.view;
-        this.switchView(view);
+        if (view) {
+          this.activePrimaryView = view; // Track which primary tab is active
+          this.switchView(view);
+        }
       });
     });
 
@@ -172,7 +175,10 @@ class App {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const view = link.dataset.view;
-        if (view) this.switchView(view);
+        if (view) {
+          this.activePrimaryView = view; // Track which primary tab is active
+          this.switchView(view);
+        }
       });
     });
 
@@ -180,11 +186,7 @@ class App {
     const fabBtn = document.getElementById('fab-add-tx');
     if (fabBtn) {
       fabBtn.addEventListener('click', () => {
-        // Capture current primary tab as the return destination BEFORE opening sub-page
-        const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
-        if (primaryViews.includes(this.currentView)) {
-          this.previousView = this.currentView;
-        }
+        // activePrimaryView is already correctly set by nav tab clicks
         window.UITransactions.openAddModal();
       });
     }
@@ -204,20 +206,6 @@ class App {
     if (!viewId) return;
     const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
     const isPrimary = primaryViews.includes(viewId);
-    const subPages = ['new-transaction', 'category-picker', 'borrow-select'];
-
-    // Always track the last visited primary tab.
-    // When navigating TO a sub-page: snapshot the active primary tab into previousView.
-    // When navigating TO a primary tab: update previousView to that tab.
-    // When navigating BETWEEN sub-pages (e.g. category-picker → new-transaction): keep previousView as-is.
-    if (!isBack && subPages.includes(viewId) && primaryViews.includes(this.currentView)) {
-      // Entering a sub-page from a primary tab → remember which primary tab to return to
-      this.previousView = this.currentView;
-    } else if (isPrimary) {
-      // Navigating to a primary tab → always keep previousView up to date
-      this.previousView = viewId;
-    }
-    // If isBack=true or moving between sub-pages, previousView stays unchanged (correct behaviour)
 
     this.currentView = viewId;
 
@@ -305,21 +293,13 @@ class App {
       }
     }
 
-    // Sub-pages go directly back to new-transaction
+    // Sub-pages (category-picker, borrow-select) → back to new-transaction
     if (this.currentView === 'category-picker' || this.currentView === 'borrow-select') {
       this.switchView('new-transaction', true);
       return;
     }
 
-    // New transaction goes back to the previous main view
-    if (this.currentView === 'new-transaction') {
-      const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
-      const target = (this.previousView && primaryViews.includes(this.previousView)) ? this.previousView : 'dashboard';
-      this.switchView(target, true);
-      return;
-    }
-
-    // Main tabs (dashboard, accounts, budgets, settings): FIXED, never jump on back swipe
+    // new-transaction and all primary tabs: FIXED — swipe does nothing
   }
 
   setupPopstateListener() {
@@ -327,25 +307,25 @@ class App {
     // This listener only handles the Android hardware back button press.
     window.addEventListener('popstate', (e) => {
       if (this.isBackTransitioning) {
-        // Already handling a back transition — block this duplicate event
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
         return;
       }
 
-      const subPages = ['new-transaction', 'category-picker', 'borrow-select'];
-      if (subPages.includes(this.currentView)) {
-        // Hardware back button pressed while on a sub-page → go back via JS
+      // Only category-picker and borrow-select support back navigation
+      if (this.currentView === 'category-picker' || this.currentView === 'borrow-select') {
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
         this.goBack();
       } else {
-        // Hardware back button on a primary tab → restore state, do nothing
+        // All other views (including new-transaction) are FIXED — ignore back button
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
       }
     });
   }
 
   setupSwipeToBack() {
-    const pages = document.querySelectorAll('.tx-page-view');
+    // Only category-picker and borrow-select support swipe-to-back.
+    // new-transaction is a FIXED tab like dashboard/accounts — no swipe navigation.
+    const pages = document.querySelectorAll('#view-category-picker, #view-borrow-select');
     if (!pages.length) return;
 
     pages.forEach(page => {
