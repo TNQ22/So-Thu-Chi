@@ -404,7 +404,7 @@
       <!-- View: New / Edit Transaction (Trang Ghi Chép Mới) -->
       <section id="view-new-transaction" class="page-view tx-page-view">
         <div class="tx-page-card-wrapper">
-          <!-- Page Header: Back (Left), Type Dropdown (Center), Check/Done (Right) -->
+          <!-- Page Header: Back (Left), Custom Type Dropdown with Icons (Center), Check/Done (Right) -->
           <div class="tx-page-header">
             <div class="tx-header-left">
               <button type="button" class="btn-icon tx-header-btn" onclick="window.app.goBack()" title="Trở lại (hoặc vuốt sang phải)">
@@ -416,16 +416,29 @@
             </div>
 
             <div class="tx-header-center">
-              <div class="tx-type-pill-select-wrapper">
-                <select id="tx-type-selector" class="tx-type-pill-select" onchange="UITransactions.handleHeaderTypeChange(this.value)">
-                  <option value="expense">Chi tiền</option>
-                  <option value="income">Thu tiền</option>
-                  <option value="lend">Cho vay</option>
-                  <option value="borrow">Đi vay</option>
-                  <option value="transfer">Chuyển khoản</option>
-                  <option value="adjust">Điều chỉnh số dư</option>
-                </select>
-                <i data-lucide="chevron-down" class="tx-type-pill-chevron"></i>
+              <div class="tx-type-dropdown-wrapper">
+                <button type="button" id="tx-type-dropdown-btn" class="tx-type-dropdown-btn" onclick="UITransactions.toggleTypeDropdown(event)">
+                  <span id="tx-type-current-icon" class="tx-type-badge-icon"><i data-lucide="arrow-down-circle" style="width: 16px; height: 16px; color: #f43f5e;"></i></span>
+                  <span id="tx-type-current-label">Chi tiền</span>
+                  <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+                </button>
+                <div id="tx-type-dropdown-menu" class="tx-type-dropdown-menu" style="display: none;">
+                  <div class="tx-type-option active" data-type="expense" onclick="UITransactions.handleHeaderTypeChange('expense')">
+                    <i data-lucide="arrow-down-circle" style="color: #f43f5e;"></i> <span>Chi tiền</span>
+                  </div>
+                  <div class="tx-type-option" data-type="income" onclick="UITransactions.handleHeaderTypeChange('income')">
+                    <i data-lucide="arrow-up-circle" style="color: #10b981;"></i> <span>Thu tiền</span>
+                  </div>
+                  <div class="tx-type-option" data-type="lend" onclick="UITransactions.handleHeaderTypeChange('lend')">
+                    <i data-lucide="arrow-up-right" style="color: #3b82f6;"></i> <span>Cho vay</span>
+                  </div>
+                  <div class="tx-type-option" data-type="borrow" onclick="UITransactions.handleHeaderTypeChange('borrow')">
+                    <i data-lucide="arrow-down-left" style="color: #f59e0b;"></i> <span>Đi vay</span>
+                  </div>
+                  <div class="tx-type-option" data-type="adjust" onclick="UITransactions.handleHeaderTypeChange('adjust')">
+                    <i data-lucide="scale" style="color: #a855f7;"></i> <span>Điều chỉnh số dư</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -448,7 +461,7 @@
 
             <div class="tx-page-body">
               <!-- Ô 1: SỐ TIỀN Ở GIỮA -->
-              <div class="tx-section-card tx-amount-card" onclick="UITransactions.openKeypad()">
+              <div class="tx-section-card tx-amount-card" onclick="UITransactions.openKeypad('amount')">
                 <div class="tx-amount-centered-display">
                   <span id="tx-amount-text" class="tx-amount-val">0</span>
                   <span class="tx-amount-cur">₫</span>
@@ -457,8 +470,8 @@
 
               <!-- Ô 2: DANH MỤC & MỤC HAY DÙNG (BỌC LẠI 1 KHUNG) -->
               <div class="tx-section-card tx-category-card" id="tx-category-section-card">
-                <!-- Hạng mục đã chọn (Bấm để xem tất cả) -->
-                <div class="category-selected-row" id="tx-selected-category-card" onclick="UITransactions.openCategoryPicker()">
+                <!-- Hạng mục đã chọn (Bấm để mở trang chọn toàn bộ danh mục) -->
+                <div class="category-selected-row" id="tx-selected-category-card" onclick="UITransactions.openCategoryPickerPage()">
                   <div class="category-selected-left">
                     <div id="tx-selected-cat-icon" class="category-icon-bubble" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">
                       <i data-lucide="utensils"></i>
@@ -498,7 +511,7 @@
                 </div>
               </div>
 
-              <!-- Ô 3: THÔNG TIN VÍ - NGÀY GIỜ - GHI CHÚ (BAO QUÁT BỌC LẠI 1 KHUNG) -->
+              <!-- Ô 3: THÔNG TIN VÍ - NGÀY GIỜ - GHI CHÚ (CỐ ĐỊNH, KHÔNG BẬT CHUYỂN VÍ) -->
               <div class="tx-section-card tx-details-card">
                 <!-- Hàng 1: Tài khoản / Ví trích tiền (kèm icon trực quan) -->
                 <div class="tx-info-row" id="tx-account-row">
@@ -511,24 +524,14 @@
                   <i data-lucide="chevron-right" class="tx-info-chevron"></i>
                 </div>
 
-                <!-- Hàng chuyển đến ví (khi là chuyển khoản) -->
-                <div class="tx-info-row" id="tx-transfer-target-group" style="display: none;">
-                  <div class="tx-info-icon-bubble" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
-                    <i data-lucide="arrow-right-left"></i>
-                  </div>
-                  <div class="tx-info-content">
-                    <select id="tx-to-account-select" class="tx-clean-select"></select>
-                  </div>
-                  <i data-lucide="chevron-right" class="tx-info-chevron"></i>
-                </div>
-
-                <!-- Hàng 2: Ngày & Giờ (Biểu tượng lịch - Thứ X - DD/MM/YYYY  HH:MM) -->
+                <!-- Hàng 2: Ngày & Giờ (Ngày lề trái, Giờ căn lề phải tách biệt) -->
                 <div class="tx-info-row" id="tx-datetime-row" onclick="UITransactions.openDateTimePicker()">
                   <div class="tx-info-icon-bubble" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">
                     <i data-lucide="calendar"></i>
                   </div>
-                  <div class="tx-info-content" style="position: relative;">
-                    <span id="tx-datetime-display" class="tx-datetime-display">Thứ 5 - 18/09/2026  09:20</span>
+                  <div class="tx-info-content tx-datetime-split-content">
+                    <span id="tx-date-display" class="tx-date-text">Thứ 5 - 18/09/2026</span>
+                    <span id="tx-time-display" class="tx-time-badge">09:20</span>
                     <input type="datetime-local" id="tx-datetime-native" class="tx-datetime-native-input" onchange="UITransactions.handleNativeDateTimeChange(this.value)">
                   </div>
                   <i data-lucide="chevron-right" class="tx-info-chevron"></i>
@@ -544,41 +547,47 @@
                   </div>
                 </div>
 
-                <!-- Mục Thêm Chi Tiết (Phí, Đi vay để trả) -->
+                <!-- Mục Thêm Chi Tiết (Phí giao dịch & Đi vay/ để trả khoản này) -->
                 <div class="collapsible-section" style="margin-top: 4px; padding-top: 6px;">
                   <button type="button" id="btn-toggle-extra-details" class="collapsible-header-btn" onclick="UITransactions.toggleExtraDetails()">
                     <div style="display: flex; align-items: center; gap: 6px;">
                       <i data-lucide="sliders-horizontal" style="width: 14px; height: 14px; color: var(--primary);"></i>
-                      <span style="font-weight: 500; font-size: 0.8rem;">Thêm Chi Tiết (Phí, Đi vay để trả...)</span>
+                      <span style="font-weight: 500; font-size: 0.8rem;">Thêm Chi Tiết (Phí, Đi vay...)</span>
                     </div>
                     <i id="extra-details-chevron" data-lucide="chevron-down" style="width: 15px; height: 15px; transition: transform 0.2s;"></i>
                   </button>
                   <div id="extra-details-body" class="collapsible-body" style="display: none;">
-                    <!-- Phí giao dịch -->
+                    <!-- Phí giao dịch (Chạm để mở bàn phím số tuỳ chỉnh) -->
                     <div class="form-group" style="margin-top: 8px;">
-                      <label class="form-label" style="font-size: 0.78rem;">Phí Giao Dịch (VNĐ - nếu có)</label>
-                      <input type="text" id="tx-fee-input" class="form-control" placeholder="0" inputmode="numeric">
+                      <label class="form-label" style="font-size: 0.78rem;">Phí Giao Dịch (VNĐ - Chạm để nhập)</label>
+                      <div class="tx-fee-clickable-field" onclick="UITransactions.openKeypad('fee')">
+                        <span id="tx-fee-display" class="tx-fee-display-val">0</span>
+                        <span class="tx-fee-display-cur">₫</span>
+                      </div>
+                      <input type="hidden" id="tx-fee-input" value="0">
                     </div>
 
-                    <!-- Đi vay để trả khoản này -->
-                    <div class="borrow-checkbox-box" style="margin-top: 8px;">
-                      <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" id="tx-is-borrowed-checkbox" onchange="UITransactions.toggleBorrowFields()" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
-                        <div>
-                          <div style="font-weight: 600; font-size: 0.85rem;">Đi vay / Mượn tiền để trả khoản này</div>
-                          <div style="font-size: 0.72rem; color: var(--text-muted);">Tự động tạo khoản nợ phải trả trong Sổ Vay Nợ</div>
+                    <!-- Đi vay/ để trả khoản này -->
+                    <div class="borrow-select-container" style="margin-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 10px;">
+                      <div class="tx-borrow-toggle-row" onclick="UITransactions.openBorrowSelectPage()">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <i data-lucide="handshake" style="width: 18px; height: 18px; color: var(--warning);"></i>
+                          <div>
+                            <div style="font-weight: 600; font-size: 0.88rem;">Đi vay/ để trả khoản này</div>
+                            <div id="tx-borrow-status-text" style="font-size: 0.72rem; color: var(--text-muted);">Bấm để chọn người cho vay từ danh sách</div>
+                          </div>
                         </div>
-                      </label>
-
-                      <div id="borrow-fields-expand" style="display: none; margin-top: 8px; padding-left: 28px; flex-direction: column; gap: 8px;">
-                        <div class="form-group">
-                          <label class="form-label" style="font-size: 0.78rem;">Vay từ ai?</label>
-                          <input type="text" id="tx-borrow-person-input" class="form-control" placeholder="Tên chủ nợ / người cho mượn">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                          <span id="tx-borrow-selected-badge" class="tx-borrow-tag" style="display: none;"></span>
+                          <button type="button" id="tx-borrow-clear-btn" class="btn-icon" style="display: none; width: 22px; height: 22px;" onclick="UITransactions.clearBorrowPerson(event)"><i data-lucide="x" style="width: 13px; height: 13px;"></i></button>
+                          <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
                         </div>
-                        <div class="form-group">
-                          <label class="form-label" style="font-size: 0.78rem;">Hạn trả (tùy chọn)</label>
-                          <input type="date" id="tx-borrow-due-date-input" class="form-control">
-                        </div>
+                      </div>
+                      <input type="checkbox" id="tx-is-borrowed-checkbox" style="display: none;">
+                      <input type="hidden" id="tx-borrow-person-input" value="">
+                      <div id="borrow-due-date-row" style="display: none; margin-top: 8px; padding-left: 26px;">
+                        <label class="form-label" style="font-size: 0.76rem; margin-bottom: 2px;">Hạn trả nợ (tùy chọn)</label>
+                        <input type="date" id="tx-borrow-due-date-input" class="form-control" style="font-size: 0.85rem;">
                       </div>
                     </div>
                   </div>
@@ -588,6 +597,127 @@
 
             <button type="submit" id="btn-submit-tx" style="display: none;"></button>
           </form>
+        </div>
+      </section>
+
+      <!-- View: Chọn Danh Mục (Dedicated Sub-Page, Không còn popup nhảy giật) -->
+      <section id="view-category-picker" class="page-view tx-page-view">
+        <div class="tx-page-card-wrapper">
+          <div class="tx-page-header">
+            <div class="tx-header-left">
+              <button type="button" class="btn-icon tx-header-btn" onclick="window.app.goBack()" title="Trở lại">
+                <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+              </button>
+            </div>
+            <div class="tx-header-center">
+              <span style="font-weight: 700; font-size: 1rem;">Chọn Danh Mục</span>
+            </div>
+            <div class="tx-header-right">
+              <button type="button" class="btn-icon tx-header-btn" onclick="UITransactions.openAddCategoryModal(UITransactions.activeCategoryTab || 'expense')" title="Thêm danh mục mới">
+                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Category Tabs (Chi Tiền, Thu Tiền, Vay Nợ - Xóa Chuyển Ví) -->
+          <div class="cat-picker-tabs">
+            <button type="button" class="cat-tab-btn active" data-tab="expense" onclick="UITransactions.switchCategoryTab('expense')">
+              <i data-lucide="arrow-down-circle"></i> Chi Tiền
+            </button>
+            <button type="button" class="cat-tab-btn" data-tab="income" onclick="UITransactions.switchCategoryTab('income')">
+              <i data-lucide="arrow-up-circle"></i> Thu Tiền
+            </button>
+            <button type="button" class="cat-tab-btn" data-tab="debt" onclick="UITransactions.switchCategoryTab('debt')">
+              <i data-lucide="handshake"></i> Vay Nợ
+            </button>
+          </div>
+
+          <div class="tx-page-body" style="padding: 14px;">
+            <!-- Tab Content: Chi Tiền -->
+            <div id="cat-tab-expense" class="cat-tab-pane active">
+              <div id="cat-list-expense" class="cat-grid-full"></div>
+            </div>
+
+            <!-- Tab Content: Thu Tiền -->
+            <div id="cat-tab-income" class="cat-tab-pane" style="display: none;">
+              <div id="cat-list-income" class="cat-grid-full"></div>
+            </div>
+
+            <!-- Tab Content: Vay Nợ (Cho vay, Đi vay, Thu nợ, Trả nợ) -->
+            <div id="cat-tab-debt" class="cat-tab-pane" style="display: none;">
+              <div class="debt-actions-grid">
+                <div class="debt-action-card" onclick="UITransactions.selectDebtAction('lend')">
+                  <div class="debt-action-icon lend"><i data-lucide="arrow-up-right"></i></div>
+                  <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Cho Vay / Chi Hộ</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Cho người khác mượn tiền từ ví</div>
+                  </div>
+                </div>
+
+                <div class="debt-action-card" onclick="UITransactions.selectDebtAction('borrow')">
+                  <div class="debt-action-icon borrow"><i data-lucide="arrow-down-left"></i></div>
+                  <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Đi Vay / Mượn Tiền</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Mượn nợ người khác nhập vào ví</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Thu Nợ (Danh sách các khoản cần thu) -->
+              <div style="margin-top: 16px;">
+                <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--income);">
+                  <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
+                  <span>Thu Nợ (Người khác trả nợ cho mình)</span>
+                </div>
+                <div id="cat-debt-collect-list" class="debt-quick-list"></div>
+              </div>
+
+              <!-- Trả Nợ (Danh sách các khoản cần trả) -->
+              <div style="margin-top: 16px;">
+                <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--warning);">
+                  <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                  <span>Trả Nợ (Mình trả nợ cho chủ nợ)</span>
+                </div>
+                <div id="cat-debt-pay-list" class="debt-quick-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Chọn Người Cho Vay (Dedicated Sub-Page cho Đi Vay để trả) -->
+      <section id="view-borrow-select" class="page-view tx-page-view">
+        <div class="tx-page-card-wrapper">
+          <div class="tx-page-header">
+            <div class="tx-header-left">
+              <button type="button" class="btn-icon tx-header-btn" onclick="window.app.goBack()" title="Trở lại">
+                <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+              </button>
+            </div>
+            <div class="tx-header-center">
+              <span style="font-weight: 700; font-size: 1rem;">Chọn Người Cho Vay</span>
+            </div>
+            <div class="tx-header-right" style="width: 36px;"></div>
+          </div>
+
+          <div class="tx-page-body" style="padding: 14px;">
+            <!-- Tìm kiếm hoặc Thêm tên mới -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <input type="text" id="borrow-search-input" class="form-control" placeholder="🔍 Tìm tên hoặc nhập tên người mới..." oninput="UITransactions.handleBorrowSearch(this.value)">
+            </div>
+
+            <!-- Nút bấm Thêm người mới nếu chưa có trong danh sách -->
+            <div id="borrow-add-new-btn-wrapper" style="display: none; margin-bottom: 12px;">
+              <button type="button" class="btn-primary" style="width: 100%; justify-content: center; padding: 10px;" onclick="UITransactions.confirmNewBorrowPerson()">
+                <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
+                <span id="borrow-add-new-btn-text">+ Chọn người này</span>
+              </button>
+            </div>
+
+            <!-- Danh sách người vay / chủ nợ có sẵn -->
+            <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">DANH BẠ NGƯỜI QUEN / CHỦ NỢ</div>
+            <div id="borrow-people-list" class="borrow-people-list"></div>
+          </div>
         </div>
       </section>
     </div>
@@ -670,112 +800,6 @@
     </div>
   </div>
 
-  <!-- ==================== FULL CATEGORY SELECTOR MODAL (4 TABS) ==================== -->
-  <div id="modal-category-picker" class="modal-overlay">
-    <div class="modal-dialog modal-category-picker-dialog">
-      <div class="modal-header">
-        <h3 class="modal-title">Chọn Danh Mục & Nghiệp Vụ</h3>
-        <button type="button" class="btn-icon" onclick="UITransactions.closeCategoryPicker()"><i data-lucide="x"></i></button>
-      </div>
-      
-      <!-- Category Tabs (Chi Tiền, Thu Tiền, Vay Nợ, Chuyển Tiền) -->
-      <div class="cat-picker-tabs">
-        <button type="button" class="cat-tab-btn active" data-tab="expense" onclick="UITransactions.switchCategoryTab('expense')">
-          <i data-lucide="arrow-down-circle"></i> Chi Tiền
-        </button>
-        <button type="button" class="cat-tab-btn" data-tab="income" onclick="UITransactions.switchCategoryTab('income')">
-          <i data-lucide="arrow-up-circle"></i> Thu Tiền
-        </button>
-        <button type="button" class="cat-tab-btn" data-tab="debt" onclick="UITransactions.switchCategoryTab('debt')">
-          <i data-lucide="handshake"></i> Vay Nợ
-        </button>
-        <button type="button" class="cat-tab-btn" data-tab="transfer" onclick="UITransactions.switchCategoryTab('transfer')">
-          <i data-lucide="arrow-right-left"></i> Chuyển Ví
-        </button>
-      </div>
-
-      <div class="modal-body" style="padding-top: 12px; max-height: 65vh; overflow-y: auto;">
-        <!-- Tab Content: Chi Tiền -->
-        <div id="cat-tab-expense" class="cat-tab-pane active">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Danh mục chi tiêu</span>
-            <button type="button" class="btn-text-action" onclick="UITransactions.openAddCategoryModal('expense')">
-              <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> + Thêm danh mục
-            </button>
-          </div>
-          <div id="cat-list-expense" class="cat-grid-full"></div>
-        </div>
-
-        <!-- Tab Content: Thu Tiền -->
-        <div id="cat-tab-income" class="cat-tab-pane" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Danh mục thu nhập</span>
-            <button type="button" class="btn-text-action" onclick="UITransactions.openAddCategoryModal('income')">
-              <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> + Thêm danh mục
-            </button>
-          </div>
-          <div id="cat-list-income" class="cat-grid-full"></div>
-        </div>
-
-        <!-- Tab Content: Vay Nợ (Cho vay, Đi vay, Thu nợ, Trả nợ) -->
-        <div id="cat-tab-debt" class="cat-tab-pane" style="display: none;">
-          <!-- 2 Action Cards: Cho Vay & Đi Vay -->
-          <div class="debt-actions-grid">
-            <div class="debt-action-card" onclick="UITransactions.selectDebtAction('lend')">
-              <div class="debt-action-icon lend"><i data-lucide="arrow-up-right"></i></div>
-              <div>
-                <div style="font-weight: 600; font-size: 0.95rem;">Cho Vay / Chi Hộ</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Cho người khác mượn tiền từ ví</div>
-              </div>
-            </div>
-
-            <div class="debt-action-card" onclick="UITransactions.selectDebtAction('borrow')">
-              <div class="debt-action-icon borrow"><i data-lucide="arrow-down-left"></i></div>
-              <div>
-                <div style="font-weight: 600; font-size: 0.95rem;">Đi Vay / Mượn Tiền</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Mượn nợ người khác nhập vào ví</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Thu Nợ (Danh sách các khoản cần thu) -->
-          <div style="margin-top: 16px;">
-            <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--income);">
-              <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
-              <span>Thu Nợ (Người khác trả nợ cho mình)</span>
-            </div>
-            <div id="cat-debt-collect-list" class="debt-quick-list">
-              <!-- Rendered dynamically: active lend debts -->
-            </div>
-          </div>
-
-          <!-- Trả Nợ (Danh sách các khoản cần trả) -->
-          <div style="margin-top: 16px;">
-            <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--warning);">
-              <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
-              <span>Trả Nợ (Mình trả nợ cho chủ nợ)</span>
-            </div>
-            <div id="cat-debt-pay-list" class="debt-quick-list">
-              <!-- Rendered dynamically: active borrow debts -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab Content: Chuyển Ví -->
-        <div id="cat-tab-transfer" class="cat-tab-pane" style="display: none;">
-          <div class="transfer-action-card" onclick="UITransactions.selectTransferAction()">
-            <div class="category-icon-bubble" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
-              <i data-lucide="arrow-right-left"></i>
-            </div>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem;">Chuyển Tiền Giữa Các Ví</div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Chuyển khoản từ ví này sang ví khác</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ==================== CATEGORY MANAGER MODAL ==================== -->
   <div id="modal-category-manager" class="modal-overlay">

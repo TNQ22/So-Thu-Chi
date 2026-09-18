@@ -200,7 +200,7 @@ class App {
     this.currentView = viewId;
 
     // Toggle body class for view-specific styles
-    document.body.classList.toggle('view-new-transaction', viewId === 'new-transaction');
+    document.body.classList.toggle('view-new-transaction', ['new-transaction', 'category-picker', 'borrow-select'].includes(viewId));
 
     // Update active nav links
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -216,7 +216,7 @@ class App {
     document.querySelectorAll('.page-view').forEach(page => {
       const isActive = page.id === `view-${viewId}`;
       page.classList.toggle('active', isActive);
-      if (page.id === 'view-new-transaction') {
+      if (page.classList.contains('tx-page-view')) {
         page.style.transform = '';
         page.style.opacity = '';
         page.style.transition = '';
@@ -232,7 +232,9 @@ class App {
       budgets: 'Hạn Mức Ngân Sách',
       analytics: 'Báo Cáo & Phân Tích',
       settings: 'Cài Đặt & Đồng Bộ',
-      'new-transaction': 'Ghi Chép Mới'
+      'new-transaction': 'Ghi Chép Mới',
+      'category-picker': 'Chọn Danh Mục',
+      'borrow-select': 'Chọn Người Cho Vay'
     };
     const titleEl = document.getElementById('header-page-title');
     if (titleEl) titleEl.textContent = titles[viewId] || 'Sổ Thu Chi';
@@ -269,9 +271,15 @@ class App {
   goBack() {
     if (window.UITransactions) {
       window.UITransactions.closeKeypad();
-      window.UITransactions.closeCategoryPicker();
+      if (typeof window.UITransactions.closeTypeDropdown === 'function') {
+        window.UITransactions.closeTypeDropdown();
+      }
     }
-    const target = (this.previousView && this.previousView !== 'new-transaction') ? this.previousView : 'dashboard';
+    if (this.currentView === 'category-picker' || this.currentView === 'borrow-select') {
+      this.switchView('new-transaction', true);
+      return;
+    }
+    const target = (this.previousView && !['new-transaction', 'category-picker', 'borrow-select'].includes(this.previousView)) ? this.previousView : 'dashboard';
     this.switchView(target, true);
   }
 
@@ -283,103 +291,105 @@ class App {
   }
 
   setupSwipeToBack() {
-    const page = document.getElementById('view-new-transaction');
-    if (!page) return;
+    const pages = document.querySelectorAll('.tx-page-view');
+    if (!pages.length) return;
 
-    let startX = 0;
-    let startY = 0;
-    let currentX = 0;
-    let deltaX = 0;
-    let deltaY = 0;
-    let startTime = 0;
-    let isSwiping = false;
-    let canSwipe = false;
+    pages.forEach(page => {
+      let startX = 0;
+      let startY = 0;
+      let currentX = 0;
+      let deltaX = 0;
+      let deltaY = 0;
+      let startTime = 0;
+      let isSwiping = false;
+      let canSwipe = false;
 
-    page.addEventListener('touchstart', (e) => {
-      if (e.touches.length !== 1) return;
-      const target = e.target;
-      // Skip if inside open keypad or category modal
-      if (target.closest('#modal-keypad.open') || target.closest('#modal-category-picker.open') || target.closest('#modal-category-manager.open')) {
-        canSwipe = false;
-        return;
-      }
-      // Skip if touching interactive input/select/button
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
-        canSwipe = false;
-        return;
-      }
-
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      currentX = startX;
-      deltaX = 0;
-      deltaY = 0;
-      startTime = Date.now();
-      isSwiping = false;
-
-      // Allow swipe starting from left area of screen
-      canSwipe = (startX <= window.innerWidth * 0.4 || startX <= 140);
-    }, { passive: true });
-
-    page.addEventListener('touchmove', (e) => {
-      if (!canSwipe || e.touches.length !== 1) return;
-      currentX = e.touches[0].clientX;
-      deltaX = currentX - startX;
-      deltaY = e.touches[0].clientY - startY;
-
-      // Only handle drag towards right
-      if (deltaX > 8) {
-        // Horizontal gesture priority
-        if (Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
-          isSwiping = true;
-          page.classList.add('swiping');
-          const translateX = Math.max(0, deltaX);
-          page.style.transform = `translateX(${translateX}px)`;
-          const progress = Math.min(translateX / (window.innerWidth * 0.7), 1);
-          page.style.opacity = `${1 - progress * 0.25}`;
+      page.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        const target = e.target;
+        // Skip if inside open keypad or category manager
+        if (target.closest('#modal-keypad.open') || target.closest('#modal-category-manager.open')) {
+          canSwipe = false;
+          return;
         }
-      }
-    }, { passive: true });
+        // Skip if touching interactive input/select/button
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
+          canSwipe = false;
+          return;
+        }
 
-    const handleTouchEnd = () => {
-      if (!isSwiping) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = startX;
+        deltaX = 0;
+        deltaY = 0;
+        startTime = Date.now();
+        isSwiping = false;
+
+        // Allow swipe starting from left area of screen
+        canSwipe = (startX <= window.innerWidth * 0.4 || startX <= 140);
+      }, { passive: true });
+
+      page.addEventListener('touchmove', (e) => {
+        if (!canSwipe || e.touches.length !== 1) return;
+        currentX = e.touches[0].clientX;
+        deltaX = currentX - startX;
+        deltaY = e.touches[0].clientY - startY;
+
+        // Only handle drag towards right
+        if (deltaX > 8) {
+          // Horizontal gesture priority
+          if (Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+            isSwiping = true;
+            page.classList.add('swiping');
+            const translateX = Math.max(0, deltaX);
+            page.style.transform = `translateX(${translateX}px)`;
+            const progress = Math.min(translateX / (window.innerWidth * 0.7), 1);
+            page.style.opacity = `${1 - progress * 0.25}`;
+          }
+        }
+      }, { passive: true });
+
+      const handleTouchEnd = () => {
+        if (!isSwiping) {
+          canSwipe = false;
+          return;
+        }
+        isSwiping = false;
         canSwipe = false;
-        return;
-      }
-      isSwiping = false;
-      canSwipe = false;
-      page.classList.remove('swiping');
+        page.classList.remove('swiping');
 
-      const duration = Date.now() - startTime;
-      const velocity = deltaX / Math.max(duration, 1);
-      const threshold = Math.min(window.innerWidth * 0.25, 80);
+        const duration = Date.now() - startTime;
+        const velocity = deltaX / Math.max(duration, 1);
+        const threshold = Math.min(window.innerWidth * 0.25, 80);
 
-      // Trigger back if past threshold or quick flick
-      if (deltaX > threshold || (deltaX > 35 && velocity > 0.3)) {
-        page.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease';
-        page.style.transform = 'translateX(100%)';
-        page.style.opacity = '0';
-        setTimeout(() => {
-          this.goBack();
-          page.style.transform = '';
-          page.style.opacity = '';
-          page.style.transition = '';
-        }, 220);
-      } else {
-        // Snap back
-        page.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease';
-        page.style.transform = 'translateX(0)';
-        page.style.opacity = '1';
-        setTimeout(() => {
-          page.style.transform = '';
-          page.style.opacity = '';
-          page.style.transition = '';
-        }, 200);
-      }
-    };
+        // Trigger back if past threshold or quick flick
+        if (deltaX > threshold || (deltaX > 35 && velocity > 0.3)) {
+          page.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease';
+          page.style.transform = 'translateX(100%)';
+          page.style.opacity = '0';
+          setTimeout(() => {
+            this.goBack();
+            page.style.transform = '';
+            page.style.opacity = '';
+            page.style.transition = '';
+          }, 220);
+        } else {
+          // Snap back
+          page.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease';
+          page.style.transform = 'translateX(0)';
+          page.style.opacity = '1';
+          setTimeout(() => {
+            page.style.transform = '';
+            page.style.opacity = '';
+            page.style.transition = '';
+          }, 200);
+        }
+      };
 
-    page.addEventListener('touchend', handleTouchEnd, { passive: true });
-    page.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+      page.addEventListener('touchend', handleTouchEnd, { passive: true });
+      page.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    });
   }
 
   setupGlobalShortcuts() {

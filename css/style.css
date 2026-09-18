@@ -1223,14 +1223,17 @@ input, textarea, select, button {
   }
 
   /* Dedicated Transaction View styling for Mobile */
-  body.view-new-transaction .app-header {
+  body.view-new-transaction .app-header,
+  body.view-category-picker .app-header,
+  body.view-borrow-select .app-header {
     display: none;
   }
 
   .tx-page-view {
-    padding: 0 !important;
+    padding: 0 0 calc(var(--bottom-nav-height) + 60px + env(safe-area-inset-bottom, 0px)) 0 !important;
     max-width: 100% !important;
     margin: 0 !important;
+    box-sizing: border-box;
   }
 
   .tx-page-card-wrapper {
@@ -1264,7 +1267,7 @@ input, textarea, select, button {
 
 /* Trang Ghi Chép Mới (Official Dedicated View) */
 .tx-page-view {
-  padding: 16px 20px 40px;
+  padding: 16px 20px calc(var(--bottom-nav-height) + 60px);
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
@@ -1272,6 +1275,7 @@ input, textarea, select, button {
   will-change: transform;
   touch-action: pan-y;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .tx-page-view.swiping {
@@ -1344,40 +1348,181 @@ input, textarea, select, button {
   background: var(--primary-hover);
 }
 
-/* Center Type Pill Select */
-.tx-type-pill-select-wrapper {
+/* Custom Type Pill Dropdown with Icons */
+.tx-type-dropdown-wrapper {
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
 }
 
-.tx-type-pill-select {
-  appearance: none;
-  -webkit-appearance: none;
+.tx-type-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: var(--bg-card);
-  color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
-  padding: 6px 30px 6px 14px;
+  padding: 6px 14px;
+  color: var(--text-primary);
   font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
-  outline: none;
-  text-align: center;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
-.tx-type-pill-select:focus, .tx-type-pill-select:hover {
+.tx-type-dropdown-btn:hover, .tx-type-dropdown-btn:focus {
   border-color: var(--primary);
 }
 
-.tx-type-pill-chevron {
+.tx-type-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tx-type-dropdown-menu {
   position: absolute;
-  right: 10px;
-  pointer-events: none;
-  width: 14px;
-  height: 14px;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  min-width: 190px;
+  z-index: 60;
+  overflow: hidden;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.tx-type-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+
+.tx-type-option:hover, .tx-type-option.active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tx-type-option i {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Date & Time Split Layout */
+.tx-datetime-split-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+}
+
+.tx-date-text {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.tx-time-badge {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  margin-right: 4px;
+}
+
+/* Clickable Fee Field */
+.tx-fee-clickable-field {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  transition: border-color 0.15s;
+}
+
+.tx-fee-clickable-field:hover, .tx-fee-clickable-field:active {
+  border-color: var(--primary);
+}
+
+.tx-fee-display-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-fee-display-cur {
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--text-muted);
+}
+
+/* Borrow Select Row & Sub-page */
+.tx-borrow-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tx-borrow-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.borrow-people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.borrow-person-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.borrow-person-item:hover, .borrow-person-item:active {
+  border-color: var(--primary);
+  background: var(--bg-card-hover);
 }
 
 /* Form and Modal Body Scrolling */
