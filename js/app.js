@@ -345,3 +345,26 @@ window.addEventListener('DOMContentLoaded', () => {
   window.app = new App();
   window.app.init();
 });
+
+// iOS Safari / Mobile PWA Viewport and Touch Misalignment Fixes
+document.addEventListener('touchstart', () => {}, { passive: true });
+
+window.addEventListener('focusout', (e) => {
+  if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+  }
+});
+
+if (window.visualViewport) {
+  const resetViewportOffset = () => {
+    if (window.visualViewport.offsetTop > 0 || window.scrollY > 0) {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+    }
+  };
+  window.visualViewport.addEventListener('resize', resetViewportOffset);
+  window.visualViewport.addEventListener('scroll', resetViewportOffset);
+}
