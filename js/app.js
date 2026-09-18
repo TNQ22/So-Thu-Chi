@@ -197,13 +197,21 @@ class App {
     if (!viewId) return;
     const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
     const isPrimary = primaryViews.includes(viewId);
+    const subPages = ['new-transaction', 'category-picker', 'borrow-select'];
 
-    // Save previousView only when switching between primary views or opening a sub-page
-    if (primaryViews.includes(this.currentView) && !isPrimary) {
+    // Always track the last visited primary tab.
+    // When navigating TO a sub-page: snapshot the active primary tab into previousView.
+    // When navigating TO a primary tab: update previousView to that tab.
+    // When navigating BETWEEN sub-pages (e.g. category-picker → new-transaction): keep previousView as-is.
+    if (!isBack && subPages.includes(viewId) && primaryViews.includes(this.currentView)) {
+      // Entering a sub-page from a primary tab → remember which primary tab to return to
       this.previousView = this.currentView;
     } else if (isPrimary) {
+      // Navigating to a primary tab → always keep previousView up to date
       this.previousView = viewId;
     }
+    // If isBack=true or moving between sub-pages, previousView stays unchanged (correct behaviour)
+
     this.currentView = viewId;
 
     // Toggle body class for view-specific styles
