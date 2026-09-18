@@ -179,7 +179,14 @@ class App {
     // Global Action Buttons
     const fabBtn = document.getElementById('fab-add-tx');
     if (fabBtn) {
-      fabBtn.addEventListener('click', () => window.UITransactions.openAddModal());
+      fabBtn.addEventListener('click', () => {
+        // Capture current primary tab as the return destination BEFORE opening sub-page
+        const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
+        if (primaryViews.includes(this.currentView)) {
+          this.previousView = this.currentView;
+        }
+        window.UITransactions.openAddModal();
+      });
     }
 
     const headerAddBtn = document.getElementById('header-add-btn');
