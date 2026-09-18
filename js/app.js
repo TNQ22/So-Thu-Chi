@@ -201,6 +201,8 @@ class App {
 
     // Toggle body class for view-specific styles
     document.body.classList.toggle('view-new-transaction', ['new-transaction', 'category-picker', 'borrow-select'].includes(viewId));
+    document.body.classList.toggle('view-category-picker', viewId === 'category-picker');
+    document.body.classList.toggle('view-borrow-select', viewId === 'borrow-select');
 
     // Update active nav links
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -268,24 +270,43 @@ class App {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  isBackTransitioning: false,
+
   goBack() {
+    if (this.isBackTransitioning) return;
+    this.isBackTransitioning = true;
+    setTimeout(() => { this.isBackTransitioning = false; }, 350);
+
     if (window.UITransactions) {
       window.UITransactions.closeKeypad();
       if (typeof window.UITransactions.closeTypeDropdown === 'function') {
         window.UITransactions.closeTypeDropdown();
       }
     }
+
+    // Sub-pages go directly back to new-transaction
     if (this.currentView === 'category-picker' || this.currentView === 'borrow-select') {
       this.switchView('new-transaction', true);
       return;
     }
-    const target = (this.previousView && !['new-transaction', 'category-picker', 'borrow-select'].includes(this.previousView)) ? this.previousView : 'dashboard';
-    this.switchView(target, true);
+
+    // New transaction goes back to the previous main view
+    if (this.currentView === 'new-transaction') {
+      const target = (this.previousView && !['new-transaction', 'category-picker', 'borrow-select'].includes(this.previousView)) ? this.previousView : 'dashboard';
+      this.switchView(target, true);
+      return;
+    }
+
+    // Main tabs (dashboard, accounts, budgets, settings): FIXED, never jump on back swipe
   }
 
   setupPopstateListener() {
     window.addEventListener('popstate', (e) => {
+      this.isBackTransitioning = true;
+      setTimeout(() => { this.isBackTransitioning = false; }, 350);
+
       const targetView = e.state?.view || (location.hash ? location.hash.replace('#', '') : 'dashboard');
+      if (targetView === this.currentView) return;
       this.switchView(targetView, true);
     });
   }
@@ -306,6 +327,9 @@ class App {
 
       page.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
+        // ONLY allow swipe on the currently ACTIVE page
+        if (!page.classList.contains('active')) return;
+
         const target = e.target;
         // Skip if inside open keypad or category manager
         if (target.closest('#modal-keypad.open') || target.closest('#modal-category-manager.open')) {
@@ -332,6 +356,7 @@ class App {
 
       page.addEventListener('touchmove', (e) => {
         if (!canSwipe || e.touches.length !== 1) return;
+        if (!page.classList.contains('active')) return;
         currentX = e.touches[0].clientX;
         deltaX = currentX - startX;
         deltaY = e.touches[0].clientY - startY;
@@ -362,6 +387,7 @@ class App {
         const duration = Date.now() - startTime;
         const velocity = deltaX / Math.max(duration, 1);
         const threshold = Math.min(window.innerWidth * 0.25, 80);
+        const swipedView = page.id.replace('view-', '');
 
         // Trigger back if past threshold or quick flick
         if (deltaX > threshold || (deltaX > 35 && velocity > 0.3)) {
@@ -369,10 +395,17 @@ class App {
           page.style.transform = 'translateX(100%)';
           page.style.opacity = '0';
           setTimeout(() => {
-            this.goBack();
             page.style.transform = '';
             page.style.opacity = '';
             page.style.transition = '';
+            // Only trigger transition if not already transitioned via native edge swipe
+            if (this.currentView === swipedView) {
+              if (swipedView === 'category-picker' || swipedView === 'borrow-select') {
+                this.switchView('new-transaction', true);
+              } else if (swipedView === 'new-transaction') {
+                this.goBack();
+              }
+            }
           }, 220);
         } else {
           // Snap back

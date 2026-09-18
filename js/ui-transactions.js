@@ -334,10 +334,10 @@ const UITransactions = {
     // Form field adaptations
     const catCard = document.getElementById('tx-category-section-card');
     if (catCard) catCard.style.display = 'flex';
-    const personGroup = document.getElementById('tx-debt-person-group');
-    if (personGroup) personGroup.style.display = 'none';
-    const dueGroup = document.getElementById('tx-debt-due-group');
-    if (dueGroup) dueGroup.style.display = 'none';
+    const personRow = document.getElementById('tx-debt-person-row');
+    if (personRow) personRow.style.display = 'none';
+    const dueRow = document.getElementById('tx-debt-due-row');
+    if (dueRow) dueRow.style.display = 'none';
     const transferGroup = document.getElementById('tx-transfer-target-group');
     if (transferGroup) transferGroup.style.display = 'none';
     const accLabel = document.getElementById('tx-account-label');
@@ -359,8 +359,12 @@ const UITransactions = {
     const iconBox = document.getElementById('tx-selected-cat-icon');
     const nameBox = document.getElementById('tx-selected-cat-name');
     const subBox = document.getElementById('tx-selected-cat-subtext');
-    const personGroup = document.getElementById('tx-debt-person-group');
-    const dueGroup = document.getElementById('tx-debt-due-group');
+    const personRow = document.getElementById('tx-debt-person-row');
+    const dueRow = document.getElementById('tx-debt-due-row');
+    const personBubble = document.getElementById('tx-debt-person-icon-bubble');
+    const personDisplay = document.getElementById('tx-debt-person-display');
+    const personSub = document.getElementById('tx-debt-person-sub');
+    const curPerson = document.getElementById('tx-person-input')?.value;
     const transferGroup = document.getElementById('tx-transfer-target-group');
     const accLabel = document.getElementById('tx-account-label');
     const typeSelector = document.getElementById('tx-type-selector');
@@ -374,20 +378,37 @@ const UITransactions = {
       if (typeSelector) typeSelector.value = 'lend';
       this.updateHeaderTypeDisplay('lend');
       this.updateAmountColor('lend');
-      if (badge) { badge.className = 'badge-type lend'; badge.textContent = 'Cho Vay / Chi Hộ'; }
+      if (badge) { badge.className = 'badge-type lend'; badge.textContent = 'Cho Vay'; }
       if (iconBox) {
         iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
         iconBox.style.color = 'var(--income)';
         iconBox.innerHTML = '<i data-lucide="arrow-up-right"></i>';
       }
-      if (nameBox) nameBox.textContent = 'Cho Vay / Chi Hộ';
-      if (subBox) subBox.textContent = 'Cho người khác mượn tiền từ ví';
+      if (nameBox) nameBox.textContent = 'Cho Vay';
+      if (subBox) subBox.textContent = 'Cho mượn tiền từ ví';
       if (catCard) catCard.style.display = 'flex';
-      if (personGroup) personGroup.style.display = 'flex';
-      if (dueGroup) dueGroup.style.display = 'flex';
-      const personLabel = document.getElementById('tx-debt-person-label');
-      if (personLabel) personLabel.textContent = 'Người Vay / Chi Cho Ai';
+      if (personRow) personRow.style.display = 'flex';
+      if (dueRow) dueRow.style.display = 'flex';
+
+      const personTitle = document.getElementById('tx-debt-person-title');
+      const personDisplay = document.getElementById('tx-debt-person-display');
+      if (personBubble) {
+        personBubble.style.background = 'rgba(59, 130, 246, 0.15)';
+        personBubble.style.color = '#3b82f6';
+        personBubble.innerHTML = '<i data-lucide="user"></i>';
+      }
+      if (curPerson) {
+        if (personTitle) personTitle.textContent = 'Cho vay';
+        if (personDisplay) personDisplay.textContent = curPerson;
+      } else {
+        if (personTitle) personTitle.textContent = 'Người vay';
+        if (personDisplay) personDisplay.textContent = 'Chưa chọn người';
+      }
+
       if (accLabel) accLabel.textContent = 'Trích Tiền Từ Ví';
+
+      this.closeCategoryPicker();
+      this.openBorrowSelectPage();
 
     } else if (subaction === 'borrow') {
       document.getElementById('tx-type-input').value = 'borrow';
@@ -395,20 +416,37 @@ const UITransactions = {
       if (typeSelector) typeSelector.value = 'borrow';
       this.updateHeaderTypeDisplay('borrow');
       this.updateAmountColor('borrow');
-      if (badge) { badge.className = 'badge-type borrow'; badge.textContent = 'Đi Vay / Mượn Tiền'; }
+      if (badge) { badge.className = 'badge-type borrow'; badge.textContent = 'Đi Vay'; }
       if (iconBox) {
         iconBox.style.background = 'rgba(245, 158, 11, 0.15)';
         iconBox.style.color = 'var(--warning)';
         iconBox.innerHTML = '<i data-lucide="arrow-down-left"></i>';
       }
-      if (nameBox) nameBox.textContent = 'Đi Vay / Mượn Tiền';
-      if (subBox) subBox.textContent = 'Mượn tiền người khác nhập vào ví';
+      if (nameBox) nameBox.textContent = 'Đi Vay';
+      if (subBox) subBox.textContent = 'Mượn tiền nhập vào ví';
       if (catCard) catCard.style.display = 'flex';
-      if (personGroup) personGroup.style.display = 'flex';
-      if (dueGroup) dueGroup.style.display = 'flex';
-      const personLabel = document.getElementById('tx-debt-person-label');
-      if (personLabel) personLabel.textContent = 'Chủ Nợ / Mượn Từ Ai';
+      if (personRow) personRow.style.display = 'flex';
+      if (dueRow) dueRow.style.display = 'flex';
+
+      const personTitle = document.getElementById('tx-debt-person-title');
+      const personDisplay = document.getElementById('tx-debt-person-display');
+      if (personBubble) {
+        personBubble.style.background = 'rgba(245, 158, 11, 0.15)';
+        personBubble.style.color = '#f59e0b';
+        personBubble.innerHTML = '<i data-lucide="user"></i>';
+      }
+      if (curPerson) {
+        if (personTitle) personTitle.textContent = 'Đi vay';
+        if (personDisplay) personDisplay.textContent = curPerson;
+      } else {
+        if (personTitle) personTitle.textContent = 'Người cho vay';
+        if (personDisplay) personDisplay.textContent = 'Chưa chọn người';
+      }
+
       if (accLabel) accLabel.textContent = 'Cộng Tiền Vào Ví';
+
+      this.closeCategoryPicker();
+      this.openBorrowSelectPage();
 
     } else if (subaction === 'debt-collect' && debtItem) {
       document.getElementById('tx-type-input').value = 'debt-collect';
@@ -424,8 +462,8 @@ const UITransactions = {
       }
       if (nameBox) nameBox.textContent = `Thu Nợ: ${debtItem.personName}`;
       if (subBox) subBox.textContent = `Số dư còn nợ: ${new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount)}đ`;
-      if (personGroup) personGroup.style.display = 'none';
-      if (dueGroup) dueGroup.style.display = 'none';
+      if (personRow) personRow.style.display = 'none';
+      if (dueRow) dueRow.style.display = 'none';
       if (accLabel) accLabel.textContent = 'Nhận Tiền Vào Ví';
       const formattedRem = new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount);
       document.getElementById('tx-amount-input').value = formattedRem;
@@ -448,8 +486,8 @@ const UITransactions = {
       }
       if (nameBox) nameBox.textContent = `Trả Nợ: ${debtItem.personName}`;
       if (subBox) subBox.textContent = `Số tiền cần trả: ${new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount)}đ`;
-      if (personGroup) personGroup.style.display = 'none';
-      if (dueGroup) dueGroup.style.display = 'none';
+      if (personRow) personRow.style.display = 'none';
+      if (dueRow) dueRow.style.display = 'none';
       if (accLabel) accLabel.textContent = 'Trích Tiền Trả Nợ Từ Ví';
       const formattedRem = new Intl.NumberFormat('vi-VN').format(debtItem.remainingAmount);
       document.getElementById('tx-amount-input').value = formattedRem;
@@ -612,9 +650,22 @@ const UITransactions = {
 
   /* ==================== BORROW PERSON SUB-PAGE ==================== */
   openBorrowSelectPage() {
+    const curType = document.getElementById('tx-type-input')?.value;
+    const headerTitle = document.getElementById('borrow-select-header-title');
     const searchInput = document.getElementById('borrow-search-input');
-    if (searchInput) searchInput.value = '';
+    const contactsLabel = document.getElementById('borrow-contacts-label');
     const addBtnWrapper = document.getElementById('borrow-add-new-btn-wrapper');
+
+    if (headerTitle) {
+      headerTitle.textContent = curType === 'lend' ? 'Chọn Người Vay' : 'Chọn Người Cho Vay';
+    }
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.placeholder = curType === 'lend' ? '🔍 Tìm tên hoặc thêm người vay...' : '🔍 Tìm tên hoặc thêm người cho vay...';
+    }
+    if (contactsLabel) {
+      contactsLabel.textContent = curType === 'lend' ? 'DANH BẠ NGƯỜI VAY' : 'DANH BẠ CHỦ NỢ';
+    }
     if (addBtnWrapper) addBtnWrapper.style.display = 'none';
 
     this.renderBorrowPeopleList('');
@@ -694,13 +745,45 @@ const UITransactions = {
     const input = document.getElementById('borrow-search-input');
     const name = input ? input.value.trim() : '';
     if (!name) {
-      showToast('Vui lòng nhập tên người cho mượn tiền', 'error');
+      showToast('Vui lòng nhập tên người', 'error');
       return;
     }
     this.selectBorrowPerson(name);
   },
 
   selectBorrowPerson(personName) {
+    const curType = document.getElementById('tx-type-input')?.value;
+    const noteInput = document.getElementById('tx-note-input');
+
+    if (curType === 'lend' || curType === 'borrow') {
+      const personInput = document.getElementById('tx-person-input');
+      const personTitle = document.getElementById('tx-debt-person-title');
+      const personDisplay = document.getElementById('tx-debt-person-display');
+      const personRow = document.getElementById('tx-debt-person-row');
+      const dueRow = document.getElementById('tx-debt-due-row');
+
+      if (personInput) personInput.value = personName;
+      if (personRow) personRow.style.display = 'flex';
+      if (dueRow) dueRow.style.display = 'flex';
+
+      if (curType === 'lend') {
+        if (personTitle) personTitle.textContent = 'Cho vay';
+        if (personDisplay) personDisplay.textContent = personName;
+        if (noteInput) noteInput.value = `Cho ${personName} vay`;
+      } else {
+        if (personTitle) personTitle.textContent = 'Đi vay';
+        if (personDisplay) personDisplay.textContent = personName;
+        if (noteInput) noteInput.value = `Vay ${personName}`;
+      }
+
+      showToast(`Đã chọn: ${personName}`, 'info');
+      if (window.app) {
+        window.app.switchView('new-transaction');
+      }
+      return;
+    }
+
+    // Default: "Đi vay để trả" in expense extra details
     const checkbox = document.getElementById('tx-is-borrowed-checkbox');
     const input = document.getElementById('tx-borrow-person-input');
     const statusText = document.getElementById('tx-borrow-status-text');
@@ -710,17 +793,20 @@ const UITransactions = {
 
     if (checkbox) checkbox.checked = true;
     if (input) input.value = personName;
-    if (statusText) statusText.textContent = `Người cho vay: ${personName}`;
+    if (statusText) statusText.textContent = `Đi vay: ${personName}`;
     if (badge) {
       badge.textContent = personName;
       badge.style.display = 'inline-flex';
     }
     if (clearBtn) clearBtn.style.display = 'inline-flex';
     if (dueDateRow) dueDateRow.style.display = 'block';
+    if (noteInput && !noteInput.value) {
+      noteInput.value = `Vay ${personName}`;
+    }
 
-    showToast(`Đã chọn người cho vay: ${personName}`, 'info');
-    if (window.app && window.app.currentView === 'borrow-select') {
-      window.app.goBack();
+    showToast(`Đã chọn: ${personName}`, 'info');
+    if (window.app) {
+      window.app.switchView('new-transaction');
     }
   },
 
@@ -736,7 +822,7 @@ const UITransactions = {
 
     if (checkbox) checkbox.checked = false;
     if (input) input.value = '';
-    if (statusText) statusText.textContent = 'Bấm để chọn người cho vay từ danh sách';
+    if (statusText) statusText.textContent = 'Chọn người cho vay';
     if (badge) badge.style.display = 'none';
     if (clearBtn) clearBtn.style.display = 'none';
     if (dueDateRow) dueDateRow.style.display = 'none';
@@ -968,8 +1054,10 @@ const UITransactions = {
 
     const catCard = document.getElementById('tx-category-section-card');
     if (catCard) catCard.style.display = 'none';
-    const personGroup = document.getElementById('tx-debt-person-group');
-    if (personGroup) personGroup.style.display = 'none';
+    const personRow = document.getElementById('tx-debt-person-row');
+    if (personRow) personRow.style.display = 'none';
+    const dueRow = document.getElementById('tx-debt-due-row');
+    if (dueRow) dueRow.style.display = 'none';
     const transferGroup = document.getElementById('tx-transfer-target-group');
     if (transferGroup) transferGroup.style.display = 'none';
 
@@ -1131,6 +1219,23 @@ const UITransactions = {
     if (feeDisplay) feeDisplay.textContent = '0';
 
     this.clearBorrowPerson();
+
+    // Reset debt person row and due date
+    const personRow = document.getElementById('tx-debt-person-row');
+    if (personRow) personRow.style.display = 'none';
+    const dueRow = document.getElementById('tx-debt-due-row');
+    if (dueRow) dueRow.style.display = 'none';
+    const personInput = document.getElementById('tx-person-input');
+    if (personInput) personInput.value = '';
+    const personTitle = document.getElementById('tx-debt-person-title');
+    if (personTitle) personTitle.textContent = 'Người vay';
+    const personDisplay = document.getElementById('tx-debt-person-display');
+    if (personDisplay) personDisplay.textContent = 'Chưa chọn người';
+    const dueDateInput = document.getElementById('tx-due-date-input');
+    if (dueDateInput) {
+      dueDateInput.value = '';
+      dueDateInput.type = 'text';
+    }
 
     // Show category card by default
     const catCard = document.getElementById('tx-category-section-card');

@@ -284,6 +284,15 @@ input, textarea, select, button {
   justify-content: space-between;
 }
 
+body.view-new-transaction .app-header,
+body.view-category-picker .app-header,
+body.view-borrow-select .app-header,
+body:has(#view-new-transaction.active) .app-header,
+body:has(#view-category-picker.active) .app-header,
+body:has(#view-borrow-select.active) .app-header {
+  display: none !important;
+}
+
 .header-left {
   display: flex;
   align-items: center;
@@ -1226,7 +1235,7 @@ input, textarea, select, button {
   body.view-new-transaction .app-header,
   body.view-category-picker .app-header,
   body.view-borrow-select .app-header {
-    display: none;
+    display: none !important;
   }
 
   .tx-page-view {
@@ -1308,16 +1317,30 @@ input, textarea, select, button {
   z-index: 20;
 }
 
-.tx-header-left, .tx-header-right {
+.tx-header-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 0 0 84px;
+  width: 84px;
+}
+
+.tx-header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 0 84px;
+  width: 84px;
 }
 
 .tx-header-center {
   flex: 1;
   display: flex;
   justify-content: center;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
 }
 
 .tx-header-btn {
@@ -1981,29 +2004,50 @@ input, textarea, select, button {
 }
 .cat-picker-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  padding: 10px 16px 0;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 10px 14px 0;
   border-bottom: 1px solid var(--border-color);
 }
 .cat-tab-btn {
-  padding: 9px 2px;
+  padding: 10px 4px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   transition: all 0.2s;
 }
-.cat-tab-btn.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+.cat-tab-btn[data-tab="expense"].active {
+  color: #f43f5e;
+  border-bottom-color: #f43f5e;
+  background: rgba(244, 63, 94, 0.08);
+}
+.cat-tab-btn[data-tab="expense"] i {
+  color: #f43f5e;
+}
+.cat-tab-btn[data-tab="income"].active {
+  color: #10b981;
+  border-bottom-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+.cat-tab-btn[data-tab="income"] i {
+  color: #10b981;
+}
+.cat-tab-btn[data-tab="debt"].active {
+  color: #f59e0b;
+  border-bottom-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+.cat-tab-btn[data-tab="debt"] i {
+  color: #f59e0b;
 }
 .cat-grid-full {
   display: grid;

@@ -501,16 +501,6 @@
                 </div>
               </div>
 
-              <!-- Extra Debt Fields if Lend / Borrow / Adjust -->
-              <div id="tx-debt-person-group" class="tx-section-card" style="display: none;">
-                <label id="tx-debt-person-label" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Người Vay / Chi Cho Ai</label>
-                <input type="text" id="tx-person-input" class="form-control" placeholder="Ví dụ: Anh Nam, Bạn Lan...">
-                <div id="tx-debt-due-group" style="margin-top: 8px;">
-                  <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Hạn Trả (Tùy chọn)</label>
-                  <input type="date" id="tx-due-date-input" class="form-control">
-                </div>
-              </div>
-
               <!-- Ô 3: THÔNG TIN VÍ - NGÀY GIỜ - GHI CHÚ (CỐ ĐỊNH, KHÔNG BẬT CHUYỂN VÍ) -->
               <div class="tx-section-card tx-details-card">
                 <!-- Hàng 1: Tài khoản / Ví trích tiền (kèm icon trực quan) -->
@@ -537,7 +527,20 @@
                   <i data-lucide="chevron-right" class="tx-info-chevron"></i>
                 </div>
 
-                <!-- Hàng 3: Ghi chú -->
+                <!-- Hàng 3: Người vay / Cho vay / Đi vay (Chạm để mở trang chọn người) -->
+                <div class="tx-info-row" id="tx-debt-person-row" style="display: none;" onclick="UITransactions.openBorrowSelectPage()">
+                  <div class="tx-info-icon-bubble" id="tx-debt-person-icon-bubble" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                    <i data-lucide="user"></i>
+                  </div>
+                  <div class="tx-info-content">
+                    <div id="tx-debt-person-title" style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500;">Người vay</div>
+                    <div id="tx-debt-person-display" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">Chưa chọn người</div>
+                    <input type="hidden" id="tx-person-input">
+                  </div>
+                  <i data-lucide="chevron-right" class="tx-info-chevron"></i>
+                </div>
+
+                <!-- Hàng 4: Ghi chú (Tự động điền Cho [Tên] vay / Vay [Tên]) -->
                 <div class="tx-info-row" id="tx-note-row">
                   <div class="tx-info-icon-bubble" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">
                     <i data-lucide="file-text"></i>
@@ -547,19 +550,30 @@
                   </div>
                 </div>
 
-                <!-- Mục Thêm Chi Tiết (Phí giao dịch & Đi vay/ để trả khoản này) -->
+                <!-- Hàng 5: Ngày thu nợ / Hạn trả (Nằm phía trên Thêm chi tiết, chỉ icon và chú thích nền) -->
+                <div class="tx-info-row" id="tx-debt-due-row" style="display: none;">
+                  <div class="tx-info-icon-bubble" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                    <i data-lucide="calendar-clock"></i>
+                  </div>
+                  <div class="tx-info-content">
+                    <input type="text" id="tx-due-date-input" class="tx-clean-input" placeholder="Hạn trả" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
+                  </div>
+                  <i data-lucide="chevron-right" class="tx-info-chevron"></i>
+                </div>
+
+                <!-- Mục Thêm Chi Tiết (Phí giao dịch & Đi vay để trả) -->
                 <div class="collapsible-section" style="margin-top: 4px; padding-top: 6px;">
                   <button type="button" id="btn-toggle-extra-details" class="collapsible-header-btn" onclick="UITransactions.toggleExtraDetails()">
                     <div style="display: flex; align-items: center; gap: 6px;">
                       <i data-lucide="sliders-horizontal" style="width: 14px; height: 14px; color: var(--primary);"></i>
-                      <span style="font-weight: 500; font-size: 0.8rem;">Thêm Chi Tiết (Phí, Đi vay...)</span>
+                      <span style="font-weight: 600; font-size: 0.82rem;">Thêm chi tiết</span>
                     </div>
                     <i id="extra-details-chevron" data-lucide="chevron-down" style="width: 15px; height: 15px; transition: transform 0.2s;"></i>
                   </button>
                   <div id="extra-details-body" class="collapsible-body" style="display: none;">
                     <!-- Phí giao dịch (Chạm để mở bàn phím số tuỳ chỉnh) -->
                     <div class="form-group" style="margin-top: 8px;">
-                      <label class="form-label" style="font-size: 0.78rem;">Phí Giao Dịch (VNĐ - Chạm để nhập)</label>
+                      <label class="form-label" style="font-size: 0.78rem;">Phí giao dịch</label>
                       <div class="tx-fee-clickable-field" onclick="UITransactions.openKeypad('fee')">
                         <span id="tx-fee-display" class="tx-fee-display-val">0</span>
                         <span class="tx-fee-display-cur">₫</span>
@@ -567,14 +581,14 @@
                       <input type="hidden" id="tx-fee-input" value="0">
                     </div>
 
-                    <!-- Đi vay/ để trả khoản này -->
+                    <!-- Đi vay để trả -->
                     <div class="borrow-select-container" style="margin-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 10px;">
                       <div class="tx-borrow-toggle-row" onclick="UITransactions.openBorrowSelectPage()">
                         <div style="display: flex; align-items: center; gap: 8px;">
                           <i data-lucide="handshake" style="width: 18px; height: 18px; color: var(--warning);"></i>
                           <div>
-                            <div style="font-weight: 600; font-size: 0.88rem;">Đi vay/ để trả khoản này</div>
-                            <div id="tx-borrow-status-text" style="font-size: 0.72rem; color: var(--text-muted);">Bấm để chọn người cho vay từ danh sách</div>
+                            <div style="font-weight: 600; font-size: 0.88rem;">Đi vay để trả</div>
+                            <div id="tx-borrow-status-text" style="font-size: 0.72rem; color: var(--text-muted);">Chọn người cho vay</div>
                           </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
@@ -586,8 +600,7 @@
                       <input type="checkbox" id="tx-is-borrowed-checkbox" style="display: none;">
                       <input type="hidden" id="tx-borrow-person-input" value="">
                       <div id="borrow-due-date-row" style="display: none; margin-top: 8px; padding-left: 26px;">
-                        <label class="form-label" style="font-size: 0.76rem; margin-bottom: 2px;">Hạn trả nợ (tùy chọn)</label>
-                        <input type="date" id="tx-borrow-due-date-input" class="form-control" style="font-size: 0.85rem;">
+                        <input type="date" id="tx-borrow-due-date-input" class="form-control" style="font-size: 0.85rem;" placeholder="Hạn trả">
                       </div>
                     </div>
                   </div>
@@ -649,16 +662,14 @@
                 <div class="debt-action-card" onclick="UITransactions.selectDebtAction('lend')">
                   <div class="debt-action-icon lend"><i data-lucide="arrow-up-right"></i></div>
                   <div>
-                    <div style="font-weight: 600; font-size: 0.95rem;">Cho Vay / Chi Hộ</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Cho người khác mượn tiền từ ví</div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Cho Vay</div>
                   </div>
                 </div>
 
                 <div class="debt-action-card" onclick="UITransactions.selectDebtAction('borrow')">
                   <div class="debt-action-icon borrow"><i data-lucide="arrow-down-left"></i></div>
                   <div>
-                    <div style="font-weight: 600; font-size: 0.95rem;">Đi Vay / Mượn Tiền</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Mượn nợ người khác nhập vào ví</div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Đi Vay</div>
                   </div>
                 </div>
               </div>
@@ -667,7 +678,7 @@
               <div style="margin-top: 16px;">
                 <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--income);">
                   <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
-                  <span>Thu Nợ (Người khác trả nợ cho mình)</span>
+                  <span>Thu Nợ</span>
                 </div>
                 <div id="cat-debt-collect-list" class="debt-quick-list"></div>
               </div>
@@ -676,7 +687,7 @@
               <div style="margin-top: 16px;">
                 <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--warning);">
                   <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
-                  <span>Trả Nợ (Mình trả nợ cho chủ nợ)</span>
+                  <span>Trả Nợ</span>
                 </div>
                 <div id="cat-debt-pay-list" class="debt-quick-list"></div>
               </div>
@@ -685,7 +696,7 @@
         </div>
       </section>
 
-      <!-- View: Chọn Người Cho Vay (Dedicated Sub-Page cho Đi Vay để trả) -->
+      <!-- View: Chọn Người (Dedicated Sub-Page) -->
       <section id="view-borrow-select" class="page-view tx-page-view">
         <div class="tx-page-card-wrapper">
           <div class="tx-page-header">
@@ -695,7 +706,7 @@
               </button>
             </div>
             <div class="tx-header-center">
-              <span style="font-weight: 700; font-size: 1rem;">Chọn Người Cho Vay</span>
+              <span id="borrow-select-header-title" style="font-weight: 700; font-size: 1rem;">Chọn Người Cho Vay</span>
             </div>
             <div class="tx-header-right" style="width: 36px;"></div>
           </div>
@@ -714,8 +725,8 @@
               </button>
             </div>
 
-            <!-- Danh sách người vay / chủ nợ có sẵn -->
-            <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">DANH BẠ NGƯỜI QUEN / CHỦ NỢ</div>
+            <!-- Danh sách người quen -->
+            <div id="borrow-contacts-label" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">DANH BẠ NGƯỜI QUEN</div>
             <div id="borrow-people-list" class="borrow-people-list"></div>
           </div>
         </div>
