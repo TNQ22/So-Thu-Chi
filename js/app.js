@@ -195,8 +195,14 @@ class App {
 
   switchView(viewId, isBack = false) {
     if (!viewId) return;
-    if (this.currentView !== viewId && this.currentView !== 'new-transaction') {
+    const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
+    const isPrimary = primaryViews.includes(viewId);
+
+    // Save previousView only when switching between primary views or opening a sub-page
+    if (primaryViews.includes(this.currentView) && !isPrimary) {
       this.previousView = this.currentView;
+    } else if (isPrimary) {
+      this.previousView = viewId;
     }
     this.currentView = viewId;
 
@@ -242,10 +248,16 @@ class App {
     const titleEl = document.getElementById('header-page-title');
     if (titleEl) titleEl.textContent = titles[viewId] || 'Sổ Thu Chi';
 
-    // Push history state if supported and not already in back navigation
-    if (!isBack && window.history && window.history.pushState) {
-      if (window.history.state?.view !== viewId) {
-        window.history.pushState({ view: viewId }, '', `#${viewId}`);
+    // Update browser history:
+    // Fixed primary menu tabs use replaceState so they NEVER create a back-history stack.
+    // Sub-pages (new-transaction, category-picker, borrow-select) use pushState to support back gesture.
+    if (!isBack && window.history) {
+      if (isPrimary) {
+        window.history.replaceState({ view: viewId }, '', `#${viewId}`);
+      } else {
+        if (window.history.state?.view !== viewId) {
+          window.history.pushState({ view: viewId }, '', `#${viewId}`);
+        }
       }
     }
 
@@ -291,7 +303,8 @@ class App {
 
     // New transaction goes back to the previous main view
     if (this.currentView === 'new-transaction') {
-      const target = (this.previousView && !['new-transaction', 'category-picker', 'borrow-select'].includes(this.previousView)) ? this.previousView : 'dashboard';
+      const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
+      const target = (this.previousView && primaryViews.includes(this.previousView)) ? this.previousView : 'dashboard';
       this.switchView(target, true);
       return;
     }
@@ -306,6 +319,14 @@ class App {
 
       const targetView = e.state?.view || (location.hash ? location.hash.replace('#', '') : 'dashboard');
       if (targetView === this.currentView) return;
+
+      const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
+      // Fixed primary tabs NEVER jump between each other on back navigation
+      if (primaryViews.includes(this.currentView) && primaryViews.includes(targetView)) {
+        window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
+        return;
+      }
+
       this.switchView(targetView, true);
     });
   }
