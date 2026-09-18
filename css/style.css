@@ -272,9 +272,8 @@ input, textarea, select, button {
   padding-bottom: 12px;
   padding-left: max(20px, env(safe-area-inset-left, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
-  background: var(--bg-glass);
-  backdrop-filter: var(--backdrop-blur);
-  -webkit-backdrop-filter: var(--backdrop-blur);
+  /* Solid background — NO backdrop-filter to avoid iOS GPU compositing layer cache issues */
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
