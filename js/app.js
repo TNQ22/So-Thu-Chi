@@ -44,6 +44,7 @@ class App {
     this.currentView = 'dashboard';
     this.previousView = 'dashboard';
     this.isPrivacyMode = false;
+    this.isBackTransitioning = false;
   }
 
   async init() {
@@ -269,8 +270,6 @@ class App {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-
-  isBackTransitioning: false,
 
   goBack() {
     if (this.isBackTransitioning) return;
