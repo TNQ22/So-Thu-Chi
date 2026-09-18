@@ -206,13 +206,31 @@ class App {
     if (!viewId) return;
     const primaryViews = ['dashboard', 'accounts', 'budgets', 'settings', 'transactions', 'debts', 'analytics'];
     const isPrimary = primaryViews.includes(viewId);
+    const isTxPage = ['new-transaction', 'category-picker', 'borrow-select'].includes(viewId);
+
+    // Instantly hide/show the header in JS FIRST — before any class/DOM changes.
+    // CSS :has() and body-class selectors update asynchronously (next paint frame),
+    // causing a 1-frame flicker where the header briefly appears. Direct style is immediate.
+    const appHeader = document.querySelector('.app-header');
+    if (appHeader) {
+      if (isTxPage) {
+        appHeader.style.display = 'none';
+        appHeader.style.backdropFilter = 'none';
+        appHeader.style.webkitBackdropFilter = 'none';
+      } else {
+        appHeader.style.display = '';
+        appHeader.style.backdropFilter = '';
+        appHeader.style.webkitBackdropFilter = '';
+      }
+    }
 
     this.currentView = viewId;
 
     // Toggle body class for view-specific styles
-    document.body.classList.toggle('view-new-transaction', ['new-transaction', 'category-picker', 'borrow-select'].includes(viewId));
+    document.body.classList.toggle('view-new-transaction', isTxPage);
     document.body.classList.toggle('view-category-picker', viewId === 'category-picker');
     document.body.classList.toggle('view-borrow-select', viewId === 'borrow-select');
+
 
     // Update active nav links
     document.querySelectorAll('.nav-item').forEach(item => {
