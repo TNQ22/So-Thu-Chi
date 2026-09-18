@@ -996,6 +996,8 @@ const UITransactions = {
     if (!fromSelect) return;
 
     const accounts = await db.accounts.where('isDeleted').equals(0).toArray();
+    accounts.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
+
     const iconMap = {
       cash: { icon: 'wallet', color: '#10b981' },
       bank: { icon: 'landmark', color: '#4f46e5' },
@@ -1004,6 +1006,9 @@ const UITransactions = {
       saving: { icon: 'piggy-bank', color: '#0ea5e9' }
     };
 
+    // Default to first account in sorted order if none selected
+    const activeFromId = selectedFromId || (accounts.length > 0 ? accounts[0].id : null);
+
     // Populate hidden native select for form reading
     const options = accounts.map(a =>
       `<option value="${a.id}">${a.name}</option>`
@@ -1011,7 +1016,7 @@ const UITransactions = {
     fromSelect.innerHTML = options;
     if (toSelect) toSelect.innerHTML = options;
 
-    if (selectedFromId) fromSelect.value = selectedFromId;
+    if (activeFromId) fromSelect.value = activeFromId;
     if (selectedToId && toSelect) toSelect.value = selectedToId;
 
     // Populate custom dropdown list with icons
@@ -1019,9 +1024,10 @@ const UITransactions = {
       dropdownList.innerHTML = accounts.map(a => {
         const info = iconMap[a.type] || { icon: 'wallet', color: '#4f46e5' };
         const bal = new Intl.NumberFormat('vi-VN').format(a.balance);
+        const isSelected = String(activeFromId) === String(a.id);
         return `
           <div class="tx-account-option" data-id="${a.id}" data-name="${a.name}" data-type="${a.type || 'cash'}" onclick="UITransactions.selectAccount(${a.id}, '${a.name}', '${a.type || 'cash'}')"
-               style="${String(selectedFromId) === String(a.id) ? 'background:rgba(255,255,255,0.08);' : ''}">
+               style="${isSelected ? 'background:rgba(255,255,255,0.08);' : ''}">
             <div class="tx-info-icon-bubble" style="background:${info.color}22; color:${info.color}; width:32px; height:32px; flex-shrink:0;">
               <i data-lucide="${info.icon}" style="width:16px;height:16px;"></i>
             </div>
@@ -1029,7 +1035,7 @@ const UITransactions = {
               <div style="font-size:0.9rem; font-weight:600; color:var(--text-primary);">${a.name}</div>
               <div style="font-size:0.78rem; color:var(--text-muted);">${bal}đ</div>
             </div>
-            ${String(selectedFromId) === String(a.id) ? '<i data-lucide="check" style="width:16px;height:16px;color:var(--primary);"></i>' : ''}
+            ${isSelected ? '<i data-lucide="check" style="width:16px;height:16px;color:var(--primary);"></i>' : ''}
           </div>`;
       }).join('');
       if (window.lucide) lucide.createIcons();

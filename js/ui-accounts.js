@@ -1,6 +1,7 @@
 /**
  * SỔ THU CHI - UI ACCOUNTS & WALLETS MODULE
  * Quản lý các ví tiền, ngân hàng, số dư thực tế và tài sản ròng
+ * Hỗ trợ hiển thị dạng list ngang và di chuyển, sắp xếp thứ tự
  */
 
 const UIAccounts = {
@@ -25,6 +26,9 @@ const UIAccounts = {
 
     form.reset();
     document.getElementById('acc-id-input').value = '';
+    const delBtn = document.getElementById('btn-delete-account');
+    if (delBtn) delBtn.style.display = 'none';
+
     modal.classList.add('open');
     setTimeout(() => document.getElementById('acc-name-input')?.focus(), 150);
   },
@@ -56,6 +60,10 @@ const UIAccounts = {
       if (type === 'credit') icon = 'credit-card';
       if (type === 'saving') icon = 'piggy-bank';
 
+      const existing = await db.accounts.where('isDeleted').equals(0).toArray();
+      const maxOrder = existing.reduce((max, a) => Math.max(max, a.order ?? 0), -1);
+      const newOrder = maxOrder + 1;
+
       await db.accounts.add({
         name,
         type,
@@ -63,6 +71,7 @@ const UIAccounts = {
         initialBalance: balance,
         icon,
         color: '#4f46e5',
+        order: newOrder,
         isDeleted: 0,
         updatedAt: now
       });
@@ -85,7 +94,113 @@ const UIAccounts = {
     document.getElementById('acc-type-select').value = acc.type;
     document.getElementById('acc-balance-input').value = acc.balance;
 
+    const delBtn = document.getElementById('btn-delete-account');
+    if (delBtn) delBtn.style.display = 'block';
+
     modal.classList.add('open');
+  },
+
+  async handleDeleteAccount() {
+    const id = document.getElementById('acc-id-input').value;
+    if (!id) return;
+    if (!confirm('Bạn có chắc muốn xóa ví này? Tất cả giao dịch cũ vẫn được lưu trong sổ.')) return;
+
+    await db.accounts.update(Number(id), { isDeleted: 1, updatedAt: Date.now() });
+    this.closeModal();
+    window.app.refreshAll();
+    showToast('Đã xóa ví', 'info');
+  },
+
+  async moveAccount(id, direction) {
+    const accounts = await db.accounts.where('isDeleted').equals(0).toArray();
+    accounts.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
+
+    const index = accounts.findIndex(a => a.id === Number(id));
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= accounts.length) return;
+
+    // Swap items
+    const temp = accounts[index];
+    accounts[index] = accounts[targetIndex];
+    accounts[targetIndex] = temp;
+
+    // Update order for all
+    const now = Date.now();
+    for (let i = 0; i < accounts.length; i++) {
+      await db.accounts.update(accounts[i].id, { order: i, updatedAt: now });
+    }
+
+    await this.render();
+    if (window.UITransactions && typeof window.UITransactions.populateAccounts === 'function') {
+      await window.UITransactions.populateAccounts();
+    }
+    showToast('Đã cập nhật vị trí ví', 'success');
+  },
+
+  async reorderAccounts(fromId, toId) {
+    if (fromId === toId) return;
+    const accounts = await db.accounts.where('isDeleted').equals(0).toArray();
+    accounts.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
+
+    const fromIndex = accounts.findIndex(a => a.id === Number(fromId));
+    const toIndex = accounts.findIndex(a => a.id === Number(toId));
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const [moved] = accounts.splice(fromIndex, 1);
+    accounts.splice(toIndex, 0, moved);
+
+    const now = Date.now();
+    for (let i = 0; i < accounts.length; i++) {
+      await db.accounts.update(accounts[i].id, { order: i, updatedAt: now });
+    }
+
+    await this.render();
+    if (window.UITransactions && typeof window.UITransactions.populateAccounts === 'function') {
+      await window.UITransactions.populateAccounts();
+    }
+    showToast('Đã sắp xếp lại thứ tự ví', 'success');
+  },
+
+  setupDragAndDrop(container) {
+    let draggedItem = null;
+
+    container.querySelectorAll('.account-list-item').forEach(item => {
+      item.addEventListener('dragstart', (e) => {
+        draggedItem = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', item.dataset.id);
+      });
+
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        container.querySelectorAll('.account-list-item').forEach(el => el.classList.remove('drag-over'));
+        draggedItem = null;
+      });
+
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedItem && draggedItem !== item) {
+          item.classList.add('drag-over');
+        }
+      });
+
+      item.addEventListener('dragleave', () => {
+        item.classList.remove('drag-over');
+      });
+
+      item.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        if (!draggedItem || draggedItem === item) return;
+        const fromId = Number(draggedItem.dataset.id);
+        const toId = Number(item.dataset.id);
+        await this.reorderAccounts(fromId, toId);
+      });
+    });
   },
 
   async render() {
@@ -93,44 +208,70 @@ const UIAccounts = {
     if (!container) return;
 
     const accounts = await db.accounts.where('isDeleted').equals(0).toArray();
+    accounts.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
 
     if (accounts.length === 0) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 32px; color: var(--text-muted);">
-          <p>Chưa có ví nào. Hãy thêm ví đầu tiên!</p>
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+          <i data-lucide="wallet" style="width: 40px; height: 40px; margin: 0 auto 12px; opacity: 0.5;"></i>
+          <p style="font-weight: 600; margin-bottom: 4px;">Chưa có ví nào</p>
+          <p style="font-size: 0.85rem;">Bấm "Thêm Ví Mới" ở trên để bắt đầu quản lý số dư</p>
         </div>
       `;
+      if (window.lucide) lucide.createIcons();
       return;
     }
 
+    const iconMap = {
+      cash: { icon: 'wallet', color: '#10b981', label: 'Tiền mặt' },
+      bank: { icon: 'landmark', color: '#4f46e5', label: 'Tài khoản Ngân hàng' },
+      ewallet: { icon: 'smartphone', color: '#ec4899', label: 'Ví điện tử' },
+      credit: { icon: 'credit-card', color: '#f59e0b', label: 'Thẻ tín dụng' },
+      saving: { icon: 'piggy-bank', color: '#0ea5e9', label: 'Sổ tiết kiệm' }
+    };
+
     let html = '';
-    for (const a of accounts) {
-      let iconName = a.icon || 'wallet';
-      let typeLabel = 'Tiền mặt';
-      if (a.type === 'bank') typeLabel = 'Tài khoản Ngân hàng';
-      if (a.type === 'ewallet') typeLabel = 'Ví điện tử';
-      if (a.type === 'credit') typeLabel = 'Thẻ tín dụng';
-      if (a.type === 'saving') typeLabel = 'Sổ tiết kiệm';
+    accounts.forEach((a, index) => {
+      const info = iconMap[a.type] || { icon: a.icon || 'wallet', color: a.color || '#4f46e5', label: 'Tài khoản' };
+      const iconName = a.icon || info.icon;
+      const isDefault = index === 0;
 
       html += `
-        <div class="stat-card" style="cursor: pointer;" onclick="UIAccounts.openEditModal(${a.id})">
-          <div class="stat-header">
-            <span class="stat-title">${typeLabel}</span>
-            <div class="stat-icon" style="background: rgba(79, 70, 229, 0.15); color: #818cf8;">
+        <div class="account-list-item" draggable="true" data-id="${a.id}" data-index="${index}">
+          <div class="account-drag-handle" title="Kéo để sắp xếp vị trí">
+            <i data-lucide="grip-vertical" style="width: 18px; height: 18px;"></i>
+          </div>
+          
+          <div class="account-item-main" onclick="UIAccounts.openEditModal(${a.id})" title="Bấm để xem hoặc sửa ví">
+            <div class="account-icon-bubble" style="background: ${info.color}22; color: ${info.color};">
               <i data-lucide="${iconName}" style="width: 20px; height: 20px;"></i>
             </div>
+            <div class="account-info">
+              <div class="account-name-row">
+                <span class="account-name">${escapeHTML(a.name)}</span>
+                ${isDefault ? '<span class="account-default-badge"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Mặc định</span>' : ''}
+              </div>
+              <span class="account-type-label">${info.label}</span>
+            </div>
+            <div class="account-balance-wrapper">
+              <span class="account-balance ${a.balance < 0 ? 'expense-text' : ''}">${new Intl.NumberFormat('vi-VN').format(a.balance)}đ</span>
+            </div>
           </div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">
-            ${escapeHTML(a.name)}
-          </div>
-          <div class="stat-amount">
-            ${new Intl.NumberFormat('vi-VN').format(a.balance)}đ
+
+          <div class="account-item-actions">
+            <button type="button" class="account-move-btn" onclick="UIAccounts.moveAccount(${a.id}, -1)" title="Chuyển lên trên" ${index === 0 ? 'disabled style="opacity:0.25;pointer-events:none;"' : ''}>
+              <i data-lucide="chevron-up"></i>
+            </button>
+            <button type="button" class="account-move-btn" onclick="UIAccounts.moveAccount(${a.id}, 1)" title="Chuyển xuống dưới" ${index === accounts.length - 1 ? 'disabled style="opacity:0.25;pointer-events:none;"' : ''}>
+              <i data-lucide="chevron-down"></i>
+            </button>
           </div>
         </div>
       `;
-    }
+    });
 
     container.innerHTML = html;
+    this.setupDragAndDrop(container);
     if (window.lucide) lucide.createIcons();
   }
 };

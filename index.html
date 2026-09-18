@@ -245,15 +245,18 @@
 
       <!-- View: Accounts (Ví & Tài khoản) -->
       <section id="view-accounts" class="page-view">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <p style="color: var(--text-secondary); font-size: 0.95rem;">Quản lý tiền mặt, thẻ ngân hàng và ví điện tử của bạn</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0;">Quản lý tiền mặt, thẻ ngân hàng và ví điện tử</p>
+            <span style="font-size: 0.78rem; color: var(--text-muted);">Kéo hoặc bấm ▲/▼ để sắp xếp. Ví ở đầu sẽ tự động chọn khi ghi chép.</span>
+          </div>
           <button class="btn-primary" onclick="UIAccounts.openAddModal()">
             <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
             Thêm Ví Mới
           </button>
         </div>
 
-        <div id="accounts-list-container" class="stats-grid"></div>
+        <div id="accounts-list-container" class="accounts-list"></div>
       </section>
 
       <!-- View: Budgets (Ngân sách chi tiêu) -->
@@ -1016,9 +1019,12 @@
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="UIAccounts.closeModal()">Hủy</button>
-          <button type="submit" class="btn-primary">Lưu Ví</button>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" id="btn-delete-account" class="btn-danger" style="display: none;" onclick="UIAccounts.handleDeleteAccount()">Xóa ví</button>
+          <div style="display: flex; gap: 8px; margin-left: auto;">
+            <button type="button" class="btn-secondary" onclick="UIAccounts.closeModal()">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu Ví</button>
+          </div>
         </div>
       </form>
     </div>

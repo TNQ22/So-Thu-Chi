@@ -514,6 +514,174 @@ body:has(#view-borrow-select.active) .app-header {
   color: var(--text-muted);
 }
 
+/* ==========================================================================
+   ACCOUNTS LIST (LIST NGANG & SẮP XẾP VỊ TRÍ)
+   ========================================================================== */
+.accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 24px;
+}
+
+.account-list-item {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  gap: 12px;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.15s;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+
+.account-list-item:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--bg-card-hover);
+}
+
+.account-list-item.dragging {
+  opacity: 0.35;
+  transform: scale(0.98);
+}
+
+.account-list-item.drag-over {
+  border-top: 2px solid var(--primary);
+}
+
+.account-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: grab;
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  touch-action: none;
+  transition: color 0.15s;
+}
+
+.account-drag-handle:hover {
+  color: var(--text-primary);
+}
+
+.account-drag-handle:active {
+  cursor: grabbing;
+}
+
+.account-item-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.account-icon-bubble {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.account-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.account-name {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-default-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+}
+
+.account-type-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.account-balance-wrapper {
+  text-align: right;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.account-balance {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.account-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.account-move-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.account-move-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.account-move-btn i {
+  width: 15px;
+  height: 15px;
+}
+
 /* Dashboard Grid (Charts & Recent Transactions) */
 .dashboard-grid {
   display: grid;
