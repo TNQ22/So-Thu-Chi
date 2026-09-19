@@ -1333,32 +1333,29 @@ const UITransactions = {
   },
 
   /**
-   * Ẩn/hiện nút Hủy và Xóa tùy theo chế độ thêm mới hay sửa
+   * Ẩn/hiện nút Xóa và cập nhật label tùy theo chế độ thêm mới hay sửa
    * @param {boolean} isEditing - true khi đang sửa, false khi thêm mới
    * @param {number|null} txId - ID giao dịch đang sửa (chỉ dùng khi isEditing=true)
    */
   setEditMode(isEditing, txId = null) {
     const deleteBtn = document.getElementById('tx-delete-btn');
-    const cancelBtn = document.getElementById('tx-cancel-btn');
     const submitLabel = document.getElementById('tx-submit-label');
     const headerTitle = document.getElementById('header-page-title');
 
     if (isEditing) {
-      // Chế độ Sửa: hiện nút Hủy + Xóa
+      // Chế độ Sửa: hiện nút Xóa (cân đối 50-50 với nút Lưu Sửa)
       if (deleteBtn) {
         deleteBtn.dataset.txId = txId;
         deleteBtn.style.display = 'flex';
       }
-      if (cancelBtn) cancelBtn.style.display = 'block';
       if (submitLabel) submitLabel.textContent = 'Lưu Sửa';
       if (headerTitle) headerTitle.textContent = 'Chỉnh Sửa Ghi Chép';
     } else {
-      // Chế độ Thêm mới: ẩn nút Hủy + Xóa
+      // Chế độ Thêm mới: ẩn nút Xóa (nút Lưu Lại chiếm toàn bộ hàng)
       if (deleteBtn) {
         deleteBtn.dataset.txId = '';
         deleteBtn.style.display = 'none';
       }
-      if (cancelBtn) cancelBtn.style.display = 'none';
       if (submitLabel) submitLabel.textContent = 'Lưu Lại';
       if (headerTitle) headerTitle.textContent = 'Ghi Chép Mới';
     }

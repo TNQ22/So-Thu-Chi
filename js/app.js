@@ -44,6 +44,7 @@ class App {
     this.currentView = 'dashboard';
     this.activePrimaryView = 'dashboard'; // ONLY updated when user taps a primary nav tab
     this.previousView = 'dashboard'; // View trước khi mở new-transaction
+    this.scrollPositions = {}; // Lưu tọa độ cuộn theo từng view
     this.isPrivacyMode = false;
     this.isBackTransitioning = false;
   }
@@ -225,6 +226,18 @@ class App {
       }
     }
 
+    // 1. Lưu vị trí cuộn của view hiện tại trước khi chuyển view
+    if (this.currentView) {
+      this.scrollPositions[this.currentView] = window.scrollY || document.documentElement.scrollTop || 0;
+    }
+
+    // 2. Lưu previousView trước khi chuyển vào các trang con (ghi chép, danh mục, ...)
+    const txSubViews = ['new-transaction', 'category-picker', 'borrow-select'];
+    if (txSubViews.includes(viewId) && !txSubViews.includes(this.currentView)) {
+      this.previousView = this.currentView;
+    }
+
+    const previousViewId = this.currentView;
     this.currentView = viewId;
 
     // Toggle body class for view-specific styles
@@ -297,17 +310,20 @@ class App {
       window.UISettings.loadSettings();
     }
 
-    // Lưu previousView trước khi chuyển vào các trang con
-    const txSubViews = ['new-transaction', 'category-picker', 'borrow-select'];
-    if (txSubViews.includes(viewId) && !txSubViews.includes(this.currentView)) {
-      this.previousView = this.currentView;
-    }
-
     const activeView = document.getElementById(`view-${viewId}`);
     if (activeView) {
       activeView.scrollTop = 0;
     }
-    if (!isTxPage) {
+
+    // Khôi phục vị trí cuộn khi trở về (isBack = true)
+    if (isBack && this.scrollPositions[viewId] !== undefined) {
+      const savedY = this.scrollPositions[viewId];
+      // Khôi phục ngay lập tức và một lần nữa sau khi DOM render ổn định
+      window.scrollTo(0, savedY);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedY);
+      });
+    } else if (!isTxPage) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       window.scrollTo(0, 0);

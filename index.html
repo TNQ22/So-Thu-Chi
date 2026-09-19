@@ -616,17 +616,14 @@
                 </div>
               </div>
             <!-- Nút hành động cuối trang -->
-            <div class="tx-bottom-action-row" style="padding: 6px 14px 14px 14px; display: flex; gap: 8px; align-items: center;">
+            <div class="tx-bottom-action-row" style="padding: 6px 14px 14px 14px; display: flex; gap: 10px; align-items: center;">
               <!-- Nút Xóa - chỉ hiện khi đang sửa -->
-              <button type="button" id="tx-delete-btn" onclick="UITransactions.confirmDeleteCurrentTx()" style="display: none; background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.25); border-radius: var(--radius-md); height: 44px; width: 44px; flex-shrink: 0; display: none; align-items: center; justify-content: center; cursor: pointer;">
+              <button type="button" id="tx-delete-btn" onclick="UITransactions.confirmDeleteCurrentTx()" style="display: none; flex: 1; height: 46px; background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.3); border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; display: none; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.2s ease;">
                 <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
-              </button>
-              <!-- Nút Hủy - chỉ hiện khi đang sửa -->
-              <button type="button" id="tx-cancel-btn" onclick="window.app.goBack()" style="display: none; flex: 1; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); height: 44px; font-size: 0.9rem; font-weight: 600; cursor: pointer;">
-                Hủy
+                <span>Xóa</span>
               </button>
               <!-- Nút Lưu Lại -->
-              <button type="submit" class="btn-primary tx-submit-bottom-btn" style="flex: 2;">
+              <button type="submit" class="btn-primary tx-submit-bottom-btn" style="flex: 1; height: 46px;">
                 <i data-lucide="check" style="width: 18px; height: 18px;"></i>
                 <span id="tx-submit-label">Lưu Lại</span>
               </button>
