@@ -1418,7 +1418,11 @@ const UITransactions = {
     }
   },
 
-  async openAddModal(defaultType = 'expense') {
+  /**
+   * Đặt lại form ghi chép về trạng thái ban đầu để tiếp tục nhập
+   * @param {string} defaultType - Loại ghi chép (expense, income, lend, borrow, adjust, transfer)
+   */
+  async resetForm(defaultType = 'expense') {
     const form = document.getElementById('transaction-form');
     if (!form) return;
 
@@ -1493,13 +1497,17 @@ const UITransactions = {
       this.selectCategory(defaultCat);
     }
 
-    // Chế độ thêm mới: ẩn nút Hủy/Xóa
+    // Chế độ thêm mới: ẩn nút Xóa
     this.setEditMode(false);
+    if (window.lucide) lucide.createIcons();
+  },
+
+  async openAddModal(defaultType = 'expense') {
+    await this.resetForm(defaultType);
 
     if (window.app) {
       window.app.switchView('new-transaction');
     }
-    if (window.lucide) lucide.createIcons();
   },
 
   closeModal() {
@@ -1699,6 +1707,7 @@ const UITransactions = {
         borrowPerson,
         borrowDueDate
       });
+      // Sửa xong thì quay trở về view trước đó
       this.closeModal();
       showToast('Đã cập nhật ghi chép', 'success');
     } else {
@@ -1715,7 +1724,8 @@ const UITransactions = {
         borrowPerson,
         borrowDueDate
       });
-      this.closeModal();
+      // Thêm mới: KHÔNG thoát về trang trước, chỉ làm mới form để người dùng tiếp tục ghi chép
+      await this.resetForm(type);
       showToast('Đã thêm ghi chép mới', 'success');
     }
     window.app.refreshAll();
