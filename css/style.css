@@ -2555,16 +2555,16 @@ body:has(#view-borrow-select.active) .app-header {
    CUSTOM CALENDAR & DATETIME PICKER (MONEY LOVER / SO THU CHI STYLE)
    ========================================================================== */
 .custom-cal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 250;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -2572,9 +2572,9 @@ body:has(#view-borrow-select.active) .app-header {
 }
 
 .custom-cal-overlay.open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .custom-cal-backdrop {

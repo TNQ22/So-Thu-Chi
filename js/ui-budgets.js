@@ -36,8 +36,9 @@ const UIBudgets = {
     const input = document.getElementById('budget-month-select');
     const curVal = input?.dataset.rawMonth || this.currentMonth;
 
-    if (window.UICalendar) {
-      UICalendar.open({
+    const cal = window.UICalendar || (typeof UICalendar !== 'undefined' ? UICalendar : null);
+    if (cal) {
+      cal.open({
         mode: 'month',
         initialDate: `${curVal}-01`,
         onSelect: (monthStr) => {
@@ -56,8 +57,9 @@ const UIBudgets = {
     const input = document.getElementById('budget-month-input');
     const curVal = input?.dataset.rawMonth || this.currentMonth;
 
-    if (window.UICalendar) {
-      UICalendar.open({
+    const cal = window.UICalendar || (typeof UICalendar !== 'undefined' ? UICalendar : null);
+    if (cal) {
+      cal.open({
         mode: 'month',
         initialDate: `${curVal}-01`,
         onSelect: (monthStr) => {

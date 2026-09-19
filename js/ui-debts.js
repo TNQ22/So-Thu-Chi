@@ -98,8 +98,9 @@ const UIDebts = {
     const input = document.getElementById('debt-date-input');
     const curVal = input?.dataset.rawDate || '';
 
-    if (window.UICalendar) {
-      UICalendar.open({
+    const cal = window.UICalendar || (typeof UICalendar !== 'undefined' ? UICalendar : null);
+    if (cal) {
+      cal.open({
         mode: 'date',
         initialDate: curVal || new Date().toISOString().split('T')[0],
         onSelect: (d) => {

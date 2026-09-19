@@ -17,10 +17,12 @@ const UICalendar = {
   activeTab: 'date', // 'date' | 'time'
   isMonthPickerOpen: false,
   onSelectCallback: null,
+  initialized: false,
 
   init() {
     this.createModalDOM();
     this.bindEvents();
+    this.initialized = true;
   },
 
   createModalDOM() {
@@ -236,6 +238,9 @@ const UICalendar = {
    *   onSelect: function(dateStr, timeStr)
    */
   open(options = {}) {
+    if (!this.initialized || !document.getElementById('modal-custom-calendar')) {
+      this.init();
+    }
     this.mode = options.mode || 'datetime';
     this.onSelectCallback = options.onSelect || null;
 
@@ -623,6 +628,11 @@ const UICalendar = {
     this.close();
   }
 };
+
+// Expose to window for global access across scripts
+if (typeof window !== 'undefined') {
+  window.UICalendar = UICalendar;
+}
 
 // Initialize on DOM ready
 if (document.readyState === 'loading') {

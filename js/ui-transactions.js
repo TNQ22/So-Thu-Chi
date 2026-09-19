@@ -1205,8 +1205,9 @@ const UITransactions = {
     const curDate = document.getElementById('tx-date-input')?.value || new Date().toISOString().split('T')[0];
     const curTime = document.getElementById('tx-time-input')?.value || '12:00';
 
-    if (window.UICalendar) {
-      UICalendar.open({
+    const cal = window.UICalendar || (typeof UICalendar !== 'undefined' ? UICalendar : null);
+    if (cal) {
+      cal.open({
         mode: 'datetime',
         initialDate: curDate,
         initialTime: curTime,
@@ -1218,6 +1219,8 @@ const UITransactions = {
           this.updateDateTimeDisplays(d, t);
         }
       });
+    } else {
+      console.warn('UICalendar is not loaded');
     }
   },
 
@@ -1225,8 +1228,9 @@ const UITransactions = {
     const input = document.getElementById('tx-due-date-input');
     const curVal = input?.dataset.rawDate || input?.value || '';
 
-    if (window.UICalendar) {
-      UICalendar.open({
+    const cal = window.UICalendar || (typeof UICalendar !== 'undefined' ? UICalendar : null);
+    if (cal) {
+      cal.open({
         mode: 'date',
         initialDate: curVal,
         onSelect: (d) => {
@@ -1243,8 +1247,9 @@ const UITransactions = {
     const input = document.getElementById('tx-borrow-due-date-input');
     const curVal = input?.dataset.rawDate || input?.value || '';
 
-    if (window.UICalendar) {
-      UICalendar.open({
+    const cal = window.UICalendar || (typeof UICalendar !== 'undefined' ? UICalendar : null);
+    if (cal) {
+      cal.open({
         mode: 'date',
         initialDate: curVal,
         onSelect: (d) => {
