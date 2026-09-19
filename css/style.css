@@ -383,7 +383,8 @@ body:has(#view-borrow-select.active) .app-header {
 }
 
 .tx-submit-bottom-btn {
-  width: 100%;
+  min-width: 0;
+  width: auto;
   padding: 13px 18px;
   display: flex;
   align-items: center;

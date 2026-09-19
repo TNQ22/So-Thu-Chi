@@ -43,6 +43,7 @@ class App {
   constructor() {
     this.currentView = 'dashboard';
     this.activePrimaryView = 'dashboard'; // ONLY updated when user taps a primary nav tab
+    this.previousView = 'dashboard'; // View trước khi mở new-transaction
     this.isPrivacyMode = false;
     this.isBackTransitioning = false;
   }
@@ -296,6 +297,12 @@ class App {
       window.UISettings.loadSettings();
     }
 
+    // Lưu previousView trước khi chuyển vào các trang con
+    const txSubViews = ['new-transaction', 'category-picker', 'borrow-select'];
+    if (txSubViews.includes(viewId) && !txSubViews.includes(this.currentView)) {
+      this.previousView = this.currentView;
+    }
+
     const activeView = document.getElementById(`view-${viewId}`);
     if (activeView) {
       activeView.scrollTop = 0;
@@ -325,7 +332,12 @@ class App {
       return;
     }
 
-    // new-transaction and all primary tabs: FIXED — swipe does nothing
+    // new-transaction → trở về view trước đó (Transactions, Dashboard, ...)
+    if (this.currentView === 'new-transaction') {
+      const target = this.previousView || this.activePrimaryView || 'transactions';
+      this.switchView(target, true);
+      return;
+    }
   }
 
   setupPopstateListener() {
@@ -337,21 +349,20 @@ class App {
         return;
       }
 
-      // Only category-picker and borrow-select support back navigation
-      if (this.currentView === 'category-picker' || this.currentView === 'borrow-select') {
+      // category-picker, borrow-select, new-transaction: all support back navigation
+      if (['category-picker', 'borrow-select', 'new-transaction'].includes(this.currentView)) {
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
         this.goBack();
       } else {
-        // All other views (including new-transaction) are FIXED — ignore back button
+        // All other views (primary tabs) are FIXED — ignore back button
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
       }
     });
   }
 
   setupSwipeToBack() {
-    // Only category-picker and borrow-select support swipe-to-back.
-    // new-transaction is a FIXED tab like dashboard/accounts — no swipe navigation.
-    const pages = document.querySelectorAll('#view-category-picker, #view-borrow-select');
+    // new-transaction, category-picker, borrow-select: all support swipe-to-back.
+    const pages = document.querySelectorAll('#view-new-transaction, #view-category-picker, #view-borrow-select');
     if (!pages.length) return;
 
     pages.forEach(page => {

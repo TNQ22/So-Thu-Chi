@@ -1332,6 +1332,38 @@ const UITransactions = {
     }
   },
 
+  /**
+   * Ẩn/hiện nút Hủy và Xóa tùy theo chế độ thêm mới hay sửa
+   * @param {boolean} isEditing - true khi đang sửa, false khi thêm mới
+   * @param {number|null} txId - ID giao dịch đang sửa (chỉ dùng khi isEditing=true)
+   */
+  setEditMode(isEditing, txId = null) {
+    const deleteBtn = document.getElementById('tx-delete-btn');
+    const cancelBtn = document.getElementById('tx-cancel-btn');
+    const submitLabel = document.getElementById('tx-submit-label');
+    const headerTitle = document.getElementById('header-page-title');
+
+    if (isEditing) {
+      // Chế độ Sửa: hiện nút Hủy + Xóa
+      if (deleteBtn) {
+        deleteBtn.dataset.txId = txId;
+        deleteBtn.style.display = 'flex';
+      }
+      if (cancelBtn) cancelBtn.style.display = 'block';
+      if (submitLabel) submitLabel.textContent = 'Lưu Sửa';
+      if (headerTitle) headerTitle.textContent = 'Chỉnh Sửa Ghi Chép';
+    } else {
+      // Chế độ Thêm mới: ẩn nút Hủy + Xóa
+      if (deleteBtn) {
+        deleteBtn.dataset.txId = '';
+        deleteBtn.style.display = 'none';
+      }
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      if (submitLabel) submitLabel.textContent = 'Lưu Lại';
+      if (headerTitle) headerTitle.textContent = 'Ghi Chép Mới';
+    }
+  },
+
   async openAddModal(defaultType = 'expense') {
     const form = document.getElementById('transaction-form');
     if (!form) return;
@@ -1407,6 +1439,9 @@ const UITransactions = {
       this.selectCategory(defaultCat);
     }
 
+    // Chế độ thêm mới: ẩn nút Hủy/Xóa
+    this.setEditMode(false);
+
     if (window.app) {
       window.app.switchView('new-transaction');
     }
@@ -1417,6 +1452,7 @@ const UITransactions = {
     this.closeKeypad();
     this.closeTypeDropdown();
     this.closeCategoryPicker();
+    // Trở về view trước đó (transactions, dashboard, ...)
     if (window.app && window.app.currentView === 'new-transaction') {
       window.app.goBack();
     }
@@ -1754,22 +1790,10 @@ const UITransactions = {
                 <span class="tx-meta">${accountDisplay}</span>
               </div>
             </div>
-            <div class="tx-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+            <div class="tx-right">
               <span class="tx-amount ${amountClass}">
                 ${amountPrefix}${new Intl.NumberFormat('vi-VN').format(t.amount)}đ
               </span>
-              <div style="display: flex; gap: 4px;">
-                <button type="button" class="tx-action-btn" title="Sửa"
-                  onclick="event.stopPropagation(); UITransactions.openEditModal(${t.id})"
-                  style="background: rgba(99,102,241,0.12); color: #818cf8; border: none; border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                  <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
-                </button>
-                <button type="button" class="tx-action-btn" title="Xóa"
-                  onclick="event.stopPropagation(); UITransactions.confirmDeleteTransaction(${t.id})"
-                  style="background: rgba(244,63,94,0.12); color: #fb7185; border: none; border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                  <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
-                </button>
-              </div>
             </div>
           </div>
         `;
@@ -1845,20 +1869,33 @@ const UITransactions = {
     // Render quick categories với trạng thái đã chọn
     await this.renderQuickCategories();
 
+    // Chế độ sửa: hiện nút Hủy + Xóa
+    this.setEditMode(true, tx.id);
+
     if (window.app) {
       window.app.switchView('new-transaction');
-      const titleEl = document.getElementById('header-page-title');
-      if (titleEl) titleEl.textContent = 'Chỉnh Sửa Ghi Chép';
     }
     if (window.lucide) lucide.createIcons();
   },
 
   /* ==================== DELETE TRANSACTION ==================== */
+  // Xóa giao dịch đang mở trong form sửa
+  async confirmDeleteCurrentTx() {
+    const deleteBtn = document.getElementById('tx-delete-btn');
+    const txId = deleteBtn?.dataset.txId;
+    if (!txId) return;
+    await this.confirmDeleteTransaction(Number(txId));
+  },
+
   async confirmDeleteTransaction(txId) {
     if (!confirm('Bạn có chắc muốn xóa giao dịch này không?\nSố dư ví sẽ được hoàn lại.')) return;
     try {
       await deleteTransaction(txId);
       showToast('Đã xóa giao dịch', 'info');
+      // Nếu đang mở form sửa thì đóng lại và trở về
+      if (window.app && window.app.currentView === 'new-transaction') {
+        window.app.goBack();
+      }
       window.app.refreshAll();
     } catch (err) {
       console.error('Delete transaction error:', err);
