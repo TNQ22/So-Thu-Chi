@@ -1339,8 +1339,9 @@ body:has(#view-borrow-select.active) .app-header {
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+  touch-action: manipulation;
 }
-.keypad-chip:hover, .keypad-chip:active {
+.keypad-chip:hover, .keypad-chip:active, .keypad-chip.pressed {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
@@ -1368,9 +1369,12 @@ body:has(#view-borrow-select.active) .app-header {
   transition: all 0.1s ease;
   user-select: none;
   -webkit-user-select: none;
+  /* Ngăn delay 300ms và double-tap zoom - cho phép multi-touch hoạt động đúng */
+  touch-action: manipulation;
 }
 
-.keypad-btn:active {
+.keypad-btn:active,
+.keypad-btn.pressed {
   background: var(--bg-card-hover);
   transform: scale(0.94);
   border-color: var(--border-focus);
@@ -1387,9 +1391,11 @@ body:has(#view-borrow-select.active) .app-header {
   color: #ffffff;
   font-weight: 700;
 }
-.keypad-btn.action-primary:active {
+.keypad-btn.action-primary:active,
+.keypad-btn.action-primary.pressed {
   background: var(--primary-hover);
 }
+
 
 /* Privacy Mode Mask: Zero Eye Strain (Mask with asterisks, NO blur) */
 .privacy-masked {
@@ -2338,6 +2344,8 @@ body:has(#view-borrow-select.active) .app-header {
   border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--border-color);
   padding: 14px 16px max(14px, env(safe-area-inset-bottom, 0px));
+  /* Trên mobile: thêm khoảng trống bằng chiều cao thanh nav dưới để không bị đè */
+  margin-bottom: 0;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
   transform: translateY(100%);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2347,6 +2355,13 @@ body:has(#view-borrow-select.active) .app-header {
 }
 .keypad-popup-overlay.open .keypad-popup-sheet {
   transform: translateY(0);
+}
+/* Trên màn hình di động: đẩy keypad lên trên thanh điều hướng cuối */
+@media (max-width: 768px) {
+  .keypad-popup-sheet {
+    margin-bottom: var(--bottom-nav-height, 64px);
+    border-radius: 20px 20px 16px 16px;
+  }
 }
 .keypad-popup-header {
   display: flex;

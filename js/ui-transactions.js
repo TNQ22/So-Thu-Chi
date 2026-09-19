@@ -48,21 +48,38 @@ const UITransactions = {
     }
 
     // Popup Keypad Button Handlers
+    // Dùng pointerdown thay vì click để hỗ trợ multi-touch:
+    // mỗi ngón tay chạm sẽ kích hoạt riêng biệt, không bị hủy khi có nhiều ngón đang giữ
     document.querySelectorAll('#modal-keypad .keypad-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
+        // Capture pointer để không bị mất nếu ngón tay trượt ra ngoài nút
+        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
         const key = btn.dataset.key;
         this.handleKeypadKey(key);
+        // Hiệu ứng nhấn ngay lập tức
+        btn.classList.add('pressed');
+      });
+      btn.addEventListener('pointerup', (e) => {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+      });
+      btn.addEventListener('pointercancel', () => {
+        btn.classList.remove('pressed');
       });
     });
 
     // Popup Keypad Quick Chips (+10k, +50k, ...)
     document.querySelectorAll('#modal-keypad .keypad-chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
+      chip.addEventListener('pointerdown', (e) => {
         e.preventDefault();
+        try { chip.setPointerCapture(e.pointerId); } catch (_) {}
         const val = Number(chip.dataset.val);
         this.handleKeypadQuickAdd(val);
+        chip.classList.add('pressed');
       });
+      chip.addEventListener('pointerup', () => chip.classList.remove('pressed'));
+      chip.addEventListener('pointercancel', () => chip.classList.remove('pressed'));
     });
 
     // Close header dropdown when clicking outside
