@@ -302,7 +302,22 @@ body:has(#view-borrow-select.active) .app-header {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+}
+
+.header-brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: none;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1024px) {
+  .header-brand-logo {
+    display: block;
+  }
 }
 
 .page-title-badge {
