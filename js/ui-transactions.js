@@ -82,6 +82,19 @@ const UITransactions = {
       chip.addEventListener('pointercancel', () => chip.classList.remove('pressed'));
     });
 
+    // Tap on keypad live display to toggle select-all / overwrite state
+    const keypadLiveDisplay = document.getElementById('keypad-live-val');
+    if (keypadLiveDisplay) {
+      keypadLiveDisplay.addEventListener('click', () => {
+        const cur = keypadLiveDisplay.textContent.trim();
+        const raw = cur.replace(/[^0-9]/g, '');
+        if (raw && Number(raw) > 0) {
+          this.keypadAutoSelect = !this.keypadAutoSelect;
+          keypadLiveDisplay.classList.toggle('is-selected', this.keypadAutoSelect);
+        }
+      });
+    }
+
     // Close header dropdown when clicking outside
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('tx-type-dropdown-menu');
@@ -136,6 +149,15 @@ const UITransactions = {
 
     if (display) {
       display.textContent = cur || '0';
+      // Tự động bôi đen (chọn toàn bộ) số liệu cũ nếu khác 0 để người dùng gõ phím mới sẽ ghi đè ngay
+      const rawNum = cur.replace(/[^0-9]/g, '');
+      if (rawNum && Number(rawNum) > 0) {
+        this.keypadAutoSelect = true;
+        display.classList.add('is-selected');
+      } else {
+        this.keypadAutoSelect = false;
+        display.classList.remove('is-selected');
+      }
     }
 
     modal.classList.add('open');
@@ -145,6 +167,11 @@ const UITransactions = {
     const modal = document.getElementById('modal-keypad');
     const display = document.getElementById('keypad-live-val');
     if (!modal) return;
+
+    if (display) {
+      display.classList.remove('is-selected');
+    }
+    this.keypadAutoSelect = false;
 
     let valStr = display ? display.textContent.trim() : '0';
     const evaluated = this.evaluateAmountExpression(valStr);
@@ -211,6 +238,31 @@ const UITransactions = {
     const display = document.getElementById('keypad-live-val');
     if (!display) return;
 
+    // Xử lý khi số liệu đang ở trạng thái bôi đen (chọn toàn bộ để ghi đè)
+    if (this.keypadAutoSelect) {
+      this.keypadAutoSelect = false;
+      display.classList.remove('is-selected');
+
+      if (key === 'clear' || key === 'backspace') {
+        display.textContent = '0';
+        return;
+      } else if (key === '+') {
+        const cur = display.textContent.trim();
+        if (cur && cur !== '0') {
+          display.textContent = cur + ' + ';
+        }
+        return;
+      } else if (key === 'done') {
+        this.closeKeypad();
+        return;
+      } else {
+        // Gõ số mới: ghi đè hoàn toàn giá trị cũ
+        const raw = key.replace(/^0+/, '');
+        display.textContent = raw ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '0';
+        return;
+      }
+    }
+
     let cur = display.textContent.trim();
     if (cur === '0' && key !== '+' && key !== 'backspace' && key !== 'clear' && key !== 'done') {
       cur = '';
@@ -250,6 +302,11 @@ const UITransactions = {
   handleKeypadQuickAdd(val) {
     const display = document.getElementById('keypad-live-val');
     if (!display) return;
+
+    if (this.keypadAutoSelect) {
+      this.keypadAutoSelect = false;
+      display.classList.remove('is-selected');
+    }
 
     const cur = display.textContent.trim();
     const evaluated = this.evaluateAmountExpression(cur) || 0;
