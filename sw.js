@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sothuchi-pwa-v1.7.5';
+const CACHE_NAME = 'sothuchi-pwa-v1.7.8';
 
 const PRECACHE_ASSETS = [
   './',
@@ -15,6 +15,7 @@ const PRECACHE_ASSETS = [
   './js/google-drive.js',
   './js/csv-export.js',
   './js/backup.js',
+  './js/ui-calendar.js',
   './js/ui-transactions.js',
   './js/ui-debts.js',
   './js/ui-accounts.js',

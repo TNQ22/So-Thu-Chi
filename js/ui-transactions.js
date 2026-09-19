@@ -834,7 +834,10 @@ const UITransactions = {
     if (badge) badge.style.display = 'none';
     if (clearBtn) clearBtn.style.display = 'none';
     if (dueDateRow) dueDateRow.style.display = 'none';
-    if (dueDateInput) dueDateInput.value = '';
+    if (dueDateInput) {
+      dueDateInput.value = '';
+      dueDateInput.dataset.rawDate = '';
+    }
   },
 
   toggleExtraDetails() {
@@ -1199,13 +1202,58 @@ const UITransactions = {
   },
 
   openDateTimePicker() {
-    const native = document.getElementById('tx-datetime-native');
-    if (native) {
-      if (typeof native.showPicker === 'function') {
-        try { native.showPicker(); } catch (e) { native.focus(); }
-      } else {
-        native.focus();
-      }
+    const curDate = document.getElementById('tx-date-input')?.value || new Date().toISOString().split('T')[0];
+    const curTime = document.getElementById('tx-time-input')?.value || '12:00';
+
+    if (window.UICalendar) {
+      UICalendar.open({
+        mode: 'datetime',
+        initialDate: curDate,
+        initialTime: curTime,
+        onSelect: (d, t) => {
+          const dateInput = document.getElementById('tx-date-input');
+          const timeInput = document.getElementById('tx-time-input');
+          if (dateInput) dateInput.value = d;
+          if (timeInput) timeInput.value = t;
+          this.updateDateTimeDisplays(d, t);
+        }
+      });
+    }
+  },
+
+  openDueDatePicker() {
+    const input = document.getElementById('tx-due-date-input');
+    const curVal = input?.dataset.rawDate || input?.value || '';
+
+    if (window.UICalendar) {
+      UICalendar.open({
+        mode: 'date',
+        initialDate: curVal,
+        onSelect: (d) => {
+          if (!input) return;
+          input.dataset.rawDate = d;
+          const [y, m, day] = d.split('-');
+          input.value = `${day}/${m}/${y}`;
+        }
+      });
+    }
+  },
+
+  openBorrowDueDatePicker() {
+    const input = document.getElementById('tx-borrow-due-date-input');
+    const curVal = input?.dataset.rawDate || input?.value || '';
+
+    if (window.UICalendar) {
+      UICalendar.open({
+        mode: 'date',
+        initialDate: curVal,
+        onSelect: (d) => {
+          if (!input) return;
+          input.dataset.rawDate = d;
+          const [y, m, day] = d.split('-');
+          input.value = `${day}/${m}/${y}`;
+        }
+      });
     }
   },
 
@@ -1213,6 +1261,7 @@ const UITransactions = {
     const fromSelect = document.getElementById('tx-account-select');
     const bubble = document.getElementById('tx-account-icon-bubble');
     const label = document.getElementById('tx-account-label');
+    const balanceEl = document.getElementById('tx-account-balance');
     if (!fromSelect || !bubble) return;
     const accId = Number(fromSelect.value);
     if (!accId) return;
@@ -1230,6 +1279,11 @@ const UITransactions = {
       bubble.style.background = `${info.color}22`;
       bubble.style.color = info.color;
       if (label) label.textContent = acc.name;
+      if (balanceEl) {
+        const balFormatted = new Intl.NumberFormat('vi-VN').format(acc.balance);
+        balanceEl.textContent = `Số dư: ${balFormatted}đ`;
+        balanceEl.style.color = acc.balance < 0 ? 'var(--expense)' : 'var(--text-muted)';
+      }
       if (window.lucide) lucide.createIcons();
     }
   },
@@ -1303,7 +1357,7 @@ const UITransactions = {
     const dueDateInput = document.getElementById('tx-due-date-input');
     if (dueDateInput) {
       dueDateInput.value = '';
-      dueDateInput.type = 'text';
+      dueDateInput.dataset.rawDate = '';
     }
 
     // Show category card by default
@@ -1373,7 +1427,7 @@ const UITransactions = {
     // Borrow details (Đi vay để trả)
     const isBorrowed = document.getElementById('tx-is-borrowed-checkbox')?.checked || false;
     const borrowPerson = document.getElementById('tx-borrow-person-input')?.value.trim();
-    const borrowDueDate = document.getElementById('tx-borrow-due-date-input')?.value;
+    const borrowDueDate = document.getElementById('tx-borrow-due-date-input')?.dataset.rawDate || document.getElementById('tx-borrow-due-date-input')?.value;
 
     if (isBorrowed && !borrowPerson) {
       showToast('Vui lòng nhập tên người cho mượn tiền', 'error');
@@ -1437,7 +1491,7 @@ const UITransactions = {
     // 2. Cho Vay / Đi Vay (Standalone new debt)
     if (type === 'lend' || type === 'borrow') {
       const personName = document.getElementById('tx-person-input').value.trim();
-      const dueDate = document.getElementById('tx-due-date-input').value;
+      const dueDate = document.getElementById('tx-due-date-input')?.dataset.rawDate || document.getElementById('tx-due-date-input')?.value;
       if (!personName) {
         showToast(type === 'lend' ? 'Vui lòng nhập người vay hoặc chi cho ai' : 'Vui lòng nhập chủ nợ hoặc mượn từ ai', 'error');
         return;

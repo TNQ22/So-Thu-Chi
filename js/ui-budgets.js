@@ -13,11 +13,8 @@ const UIBudgets = {
   bindEvents() {
     const budgetMonthInput = document.getElementById('budget-month-select');
     if (budgetMonthInput) {
-      budgetMonthInput.value = this.currentMonth;
-      budgetMonthInput.addEventListener('change', (e) => {
-        this.currentMonth = e.target.value;
-        this.render();
-      });
+      budgetMonthInput.dataset.rawMonth = this.currentMonth;
+      budgetMonthInput.value = this.formatMonthDisplay(this.currentMonth);
     }
 
     const budgetForm = document.getElementById('budget-form');
@@ -29,13 +26,61 @@ const UIBudgets = {
     }
   },
 
+  formatMonthDisplay(monthStr) {
+    if (!monthStr) return '';
+    const [y, m] = monthStr.split('-');
+    return `Tháng ${m}/${y}`;
+  },
+
+  openFilterMonthPicker() {
+    const input = document.getElementById('budget-month-select');
+    const curVal = input?.dataset.rawMonth || this.currentMonth;
+
+    if (window.UICalendar) {
+      UICalendar.open({
+        mode: 'month',
+        initialDate: `${curVal}-01`,
+        onSelect: (monthStr) => {
+          this.currentMonth = monthStr;
+          if (input) {
+            input.dataset.rawMonth = monthStr;
+            input.value = this.formatMonthDisplay(monthStr);
+          }
+          this.render();
+        }
+      });
+    }
+  },
+
+  openAddMonthPicker() {
+    const input = document.getElementById('budget-month-input');
+    const curVal = input?.dataset.rawMonth || this.currentMonth;
+
+    if (window.UICalendar) {
+      UICalendar.open({
+        mode: 'month',
+        initialDate: `${curVal}-01`,
+        onSelect: (monthStr) => {
+          if (input) {
+            input.dataset.rawMonth = monthStr;
+            input.value = this.formatMonthDisplay(monthStr);
+          }
+        }
+      });
+    }
+  },
+
   async openAddModal() {
     const modal = document.getElementById('modal-budget');
     const form = document.getElementById('budget-form');
     if (!modal || !form) return;
 
     form.reset();
-    document.getElementById('budget-month-input').value = this.currentMonth;
+    const addMonthInput = document.getElementById('budget-month-input');
+    if (addMonthInput) {
+      addMonthInput.dataset.rawMonth = this.currentMonth;
+      addMonthInput.value = this.formatMonthDisplay(this.currentMonth);
+    }
 
     // Populate expense categories
     const categories = await db.categories.where('type').equals('expense').and(c => c.isDeleted === 0).toArray();
@@ -55,7 +100,7 @@ const UIBudgets = {
 
   async handleFormSubmit() {
     const categoryId = Number(document.getElementById('budget-category-select').value);
-    const month = document.getElementById('budget-month-input').value;
+    const month = document.getElementById('budget-month-input')?.dataset.rawMonth || document.getElementById('budget-month-input')?.value;
     const limitAmount = Number(document.getElementById('budget-amount-input').value);
 
     if (!limitAmount || limitAmount <= 0) {

@@ -65,7 +65,11 @@ const UIDebts = {
 
     form.reset();
     document.getElementById('debt-type-select').value = type;
-    document.getElementById('debt-date-input').value = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('debt-date-input');
+    if (dateInput) {
+      dateInput.value = '';
+      dateInput.dataset.rawDate = '';
+    }
 
     // Populate accounts
     const accounts = await db.accounts.where('isDeleted').equals(0).toArray();
@@ -90,12 +94,30 @@ const UIDebts = {
     if (modal) modal.classList.remove('open');
   },
 
+  openDatePicker() {
+    const input = document.getElementById('debt-date-input');
+    const curVal = input?.dataset.rawDate || '';
+
+    if (window.UICalendar) {
+      UICalendar.open({
+        mode: 'date',
+        initialDate: curVal || new Date().toISOString().split('T')[0],
+        onSelect: (d) => {
+          if (!input) return;
+          input.dataset.rawDate = d;
+          const [y, m, day] = d.split('-');
+          input.value = `${day}/${m}/${y}`;
+        }
+      });
+    }
+  },
+
   async handleDebtSubmit() {
     const type = document.getElementById('debt-type-select').value;
     const personName = document.getElementById('debt-person-input').value.trim();
     const amountRaw = (document.getElementById('debt-amount-input').value || '').replace(/\./g, '');
     const amount = Number(amountRaw);
-    const dueDate = document.getElementById('debt-date-input').value;
+    const dueDate = document.getElementById('debt-date-input')?.dataset.rawDate || document.getElementById('debt-date-input')?.value || '';
     const accountId = document.getElementById('debt-account-select').value;
     const note = document.getElementById('debt-note-input').value.trim();
 

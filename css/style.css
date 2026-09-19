@@ -57,8 +57,8 @@
 
   /* Layout dimensions */
   --sidebar-width: 260px;
-  --header-height: 64px;
-  --bottom-nav-height: 54px;
+  --header-height: 54px;
+  --bottom-nav-height: 64px;
 }
 
 [data-theme="light"] {
@@ -523,6 +523,7 @@ body:has(#view-borrow-select.active) .app-header {
   gap: 10px;
   width: 100%;
   max-width: 800px;
+  box-sizing: border-box;
   margin-bottom: 24px;
 }
 
@@ -538,6 +539,10 @@ body:has(#view-borrow-select.active) .app-header {
   user-select: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .account-list-item:hover {
@@ -582,11 +587,12 @@ body:has(#view-borrow-select.active) .app-header {
   min-width: 0;
   gap: 12px;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .account-icon-bubble {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -600,53 +606,62 @@ body:has(#view-borrow-select.active) .app-header {
   gap: 2px;
   flex: 1;
   min-width: 0;
-}
-
-.account-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  overflow: hidden;
 }
 
 .account-name {
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
+}
+
+.account-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .account-default-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.3);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 1px 7px;
+  padding: 1px 6px;
   border-radius: var(--radius-full);
+  line-height: 1.3;
+  flex-shrink: 0;
 }
 
 .account-type-label {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .account-balance-wrapper {
   text-align: right;
   flex-shrink: 0;
-  margin-right: 4px;
+  margin-left: auto;
 }
 
 .account-balance {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .account-item-actions {
@@ -1223,8 +1238,8 @@ body:has(#view-borrow-select.active) .app-header {
   left: 0;
   right: 0;
   width: 100%;
-  padding-top: 5px;
-  padding-bottom: 6px;
+  padding-top: 6px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   padding-left: 8px;
   padding-right: max(8px, env(safe-area-inset-right, 0px));
   background: var(--bg-surface);
@@ -1380,7 +1395,7 @@ body:has(#view-borrow-select.active) .app-header {
   :root {
     --sidebar-width: 0px;
     --header-height: 52px;
-    --bottom-nav-height: 56px;
+    --bottom-nav-height: 64px;
   }
 
   .app-sidebar {
@@ -1391,7 +1406,12 @@ body:has(#view-borrow-select.active) .app-header {
     margin-left: 0;
     min-height: 100vh;
     min-height: 100dvh;
-    padding-bottom: calc(var(--bottom-nav-height) + 16px);
+    padding-bottom: calc(var(--bottom-nav-height) + 20px);
+  }
+
+  /* Ẩn nút thêm trên thanh tiêu đề trên điện thoại */
+  #header-add-btn {
+    display: none !important;
   }
 
   .mobile-bottom-nav {
@@ -1473,7 +1493,7 @@ body:has(#view-borrow-select.active) .app-header {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 0 0 calc(var(--bottom-nav-height) + 40px) 0 !important;
+    padding: 0 0 calc(var(--bottom-nav-height) + 48px) 0 !important;
     max-width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box;
@@ -1489,6 +1509,76 @@ body:has(#view-borrow-select.active) .app-header {
     box-shadow: none !important;
     background: transparent !important;
     overflow: visible !important;
+  }
+
+  /* Compact accounts list on mobile to prevent overflow */
+  .accounts-list {
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .account-list-item {
+    padding: 8px 8px;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .account-drag-handle {
+    padding: 2px;
+  }
+
+  .account-drag-handle i {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .account-item-main {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .account-icon-bubble {
+    width: 34px;
+    height: 34px;
+  }
+
+  .account-icon-bubble i {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .account-name {
+    font-size: 0.88rem;
+  }
+
+  .account-type-label {
+    font-size: 0.72rem;
+  }
+
+  .account-default-badge {
+    font-size: 0.65rem;
+    padding: 0 5px;
+  }
+
+  .account-balance {
+    font-size: 0.9rem;
+  }
+
+  .account-item-actions {
+    gap: 2px;
+  }
+
+  .account-move-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .account-move-btn i {
+    width: 13px !important;
+    height: 13px !important;
   }
 }
 
@@ -2445,3 +2535,562 @@ body:has(#view-borrow-select.active) .app-header {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
 }
+
+/* ==========================================================================
+   CUSTOM CALENDAR & DATETIME PICKER (MONEY LOVER / SO THU CHI STYLE)
+   ========================================================================== */
+.custom-cal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.custom-cal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.custom-cal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.custom-cal-container {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  transform: scale(0.95);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-cal-overlay.open .custom-cal-container {
+  transform: scale(1);
+}
+
+/* Top Bar: Date | Time */
+.custom-cal-topbar {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+[data-theme="dark"] .custom-cal-topbar {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+/* Connectors between Topbar and Card as seen in screenshot */
+.custom-cal-topbar::after,
+.custom-cal-topbar::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  width: 7px;
+  height: 14px;
+  background: #cbd5e1;
+  border-radius: 4px;
+  z-index: 10;
+}
+.custom-cal-topbar::before {
+  left: 55px;
+}
+.custom-cal-topbar::after {
+  right: 55px;
+}
+[data-theme="dark"] .custom-cal-topbar::after,
+[data-theme="dark"] .custom-cal-topbar::before {
+  background: #475569;
+}
+
+.custom-cal-top-item {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-cal-top-item.active {
+  color: #0288d1;
+}
+
+[data-theme="dark"] .custom-cal-top-item.active {
+  color: #38bdf8;
+}
+
+.custom-cal-top-divider {
+  width: 1.5px;
+  height: 24px;
+  background: #e2e8f0;
+}
+
+[data-theme="dark"] .custom-cal-top-divider {
+  background: #334155;
+}
+
+/* Main Card */
+.custom-cal-card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  width: 100%;
+  padding: 16px 16px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 5;
+}
+
+[data-theme="dark"] .custom-cal-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Header */
+.custom-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 6px 4px;
+}
+
+.custom-cal-nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  transition: background 0.15s, transform 0.1s;
+}
+
+[data-theme="dark"] .custom-cal-nav-btn {
+  color: #cbd5e1;
+}
+
+.custom-cal-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .custom-cal-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.custom-cal-nav-btn:active {
+  transform: scale(0.92);
+}
+
+.custom-cal-month-pill {
+  background: #0288d1;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  border-radius: 24px;
+  padding: 6px 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(2, 136, 209, 0.35);
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.custom-cal-month-pill:hover {
+  opacity: 0.92;
+}
+
+.custom-cal-month-pill:active {
+  transform: scale(0.96);
+}
+
+/* Weekdays Row: T2 -> CN */
+.custom-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 4px 0;
+  user-select: none;
+}
+
+[data-theme="dark"] .custom-cal-weekdays {
+  color: #94a3b8;
+}
+
+/* Days Grid */
+.custom-cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 6px;
+  justify-items: center;
+  align-items: center;
+  user-select: none;
+}
+
+.custom-cal-day {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.custom-cal-day.current-month {
+  color: #1e293b;
+}
+
+[data-theme="dark"] .custom-cal-day.current-month {
+  color: #f1f5f9;
+}
+
+.custom-cal-day.other-month {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+[data-theme="dark"] .custom-cal-day.other-month {
+  color: #64748b;
+}
+
+.custom-cal-day:hover:not(.selected) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .custom-cal-day:hover:not(.selected) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Selected Day Circle: Emerald Green Badge */
+.custom-cal-day.selected {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.42);
+  transform: scale(1.04);
+}
+
+.custom-cal-day.today:not(.selected) {
+  position: relative;
+}
+
+.custom-cal-day.today:not(.selected)::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  background: #16a34a;
+  border-radius: 50%;
+}
+
+/* Month Selector Panel */
+.custom-cal-month-selector {
+  padding: 6px 0;
+}
+
+.custom-cal-year-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.custom-cal-year-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0288d1;
+}
+
+[data-theme="dark"] .custom-cal-year-title {
+  color: #38bdf8;
+}
+
+.custom-cal-months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.custom-cal-month-item {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.custom-cal-month-item:hover {
+  border-color: #0288d1;
+  background: rgba(2, 136, 209, 0.08);
+}
+
+.custom-cal-month-item.selected {
+  background: #0288d1;
+  color: #ffffff;
+  border-color: #0288d1;
+}
+
+/* Time Picker View */
+.custom-cal-time-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.custom-cal-time-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.custom-cal-time-display-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(2, 136, 209, 0.08);
+  border-radius: 14px;
+  border: 1px solid rgba(2, 136, 209, 0.2);
+}
+
+.custom-cal-time-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.custom-cal-time-val {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0288d1;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+[data-theme="dark"] .custom-cal-time-val {
+  color: #38bdf8;
+}
+
+.custom-cal-time-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.custom-cal-time-colon {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0288d1;
+  margin-top: -6px;
+}
+
+.custom-cal-time-columns {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  justify-content: center;
+}
+
+.custom-cal-time-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.custom-cal-time-col-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.custom-cal-time-list {
+  width: 100%;
+  height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-card);
+  scrollbar-width: thin;
+}
+
+.custom-cal-time-item {
+  width: 100%;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.custom-cal-time-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.custom-cal-time-item.active {
+  background: #0288d1;
+  color: #ffffff;
+}
+
+.custom-cal-time-presets {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cal-time-preset-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cal-time-preset-btn:hover {
+  border-color: #0288d1;
+  color: #0288d1;
+}
+
+/* Bottom Action Buttons: Hôm nay & Xong */
+.custom-cal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.custom-cal-btn-today {
+  flex: 1;
+  height: 44px;
+  background: transparent;
+  border: 1.5px solid #0288d1;
+  color: #0288d1;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="dark"] .custom-cal-btn-today {
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.custom-cal-btn-today:hover {
+  background: rgba(2, 136, 209, 0.08);
+}
+
+.custom-cal-btn-today:active {
+  transform: scale(0.97);
+}
+
+.custom-cal-btn-done {
+  flex: 1;
+  height: 44px;
+  background: #0288d1;
+  border: none;
+  color: #ffffff;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(2, 136, 209, 0.35);
+  transition: opacity 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-cal-btn-done:hover {
+  opacity: 0.92;
+}
+
+.custom-cal-btn-done:active {
+  transform: scale(0.97);
+}
+

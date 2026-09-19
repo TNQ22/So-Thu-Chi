@@ -239,19 +239,19 @@ const UIAccounts = {
       html += `
         <div class="account-list-item" draggable="true" data-id="${a.id}" data-index="${index}">
           <div class="account-drag-handle" title="Kéo để sắp xếp vị trí">
-            <i data-lucide="grip-vertical" style="width: 18px; height: 18px;"></i>
+            <i data-lucide="grip-vertical" style="width: 16px; height: 16px;"></i>
           </div>
           
           <div class="account-item-main" onclick="UIAccounts.openEditModal(${a.id})" title="Bấm để xem hoặc sửa ví">
             <div class="account-icon-bubble" style="background: ${info.color}22; color: ${info.color};">
-              <i data-lucide="${iconName}" style="width: 20px; height: 20px;"></i>
+              <i data-lucide="${iconName}" style="width: 18px; height: 18px;"></i>
             </div>
             <div class="account-info">
-              <div class="account-name-row">
-                <span class="account-name">${escapeHTML(a.name)}</span>
-                ${isDefault ? '<span class="account-default-badge"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Mặc định</span>' : ''}
+              <span class="account-name" title="${escapeHTML(a.name)}">${escapeHTML(a.name)}</span>
+              <div class="account-sub-row">
+                <span class="account-type-label">${info.label}</span>
+                ${isDefault ? '<span class="account-default-badge"><i data-lucide="check-circle-2" style="width:10px;height:10px;"></i> Mặc định</span>' : ''}
               </div>
-              <span class="account-type-label">${info.label}</span>
             </div>
             <div class="account-balance-wrapper">
               <span class="account-balance ${a.balance < 0 ? 'expense-text' : ''}">${new Intl.NumberFormat('vi-VN').format(a.balance)}đ</span>
@@ -259,10 +259,10 @@ const UIAccounts = {
           </div>
 
           <div class="account-item-actions">
-            <button type="button" class="account-move-btn" onclick="UIAccounts.moveAccount(${a.id}, -1)" title="Chuyển lên trên" ${index === 0 ? 'disabled style="opacity:0.25;pointer-events:none;"' : ''}>
+            <button type="button" class="account-move-btn" onclick="event.stopPropagation(); UIAccounts.moveAccount(${a.id}, -1)" title="Chuyển lên trên" ${index === 0 ? 'disabled style="opacity:0.25;pointer-events:none;"' : ''}>
               <i data-lucide="chevron-up"></i>
             </button>
-            <button type="button" class="account-move-btn" onclick="UIAccounts.moveAccount(${a.id}, 1)" title="Chuyển xuống dưới" ${index === accounts.length - 1 ? 'disabled style="opacity:0.25;pointer-events:none;"' : ''}>
+            <button type="button" class="account-move-btn" onclick="event.stopPropagation(); UIAccounts.moveAccount(${a.id}, 1)" title="Chuyển xuống dưới" ${index === accounts.length - 1 ? 'disabled style="opacity:0.25;pointer-events:none;"' : ''}>
               <i data-lucide="chevron-down"></i>
             </button>
           </div>
