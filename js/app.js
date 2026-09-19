@@ -348,10 +348,13 @@ class App {
       return;
     }
 
-    // new-transaction → trở về view trước đó (Transactions, Dashboard, ...)
+    // new-transaction → chỉ trở về khi đang ở chế độ SỬA giao dịch đã có
     if (this.currentView === 'new-transaction') {
-      const target = this.previousView || this.activePrimaryView || 'transactions';
-      this.switchView(target, true);
+      const txId = document.getElementById('tx-id-input')?.value;
+      if (txId) {
+        const target = this.previousView || this.activePrimaryView || 'transactions';
+        this.switchView(target, true);
+      }
       return;
     }
   }
@@ -365,10 +368,17 @@ class App {
         return;
       }
 
-      // category-picker, borrow-select, new-transaction: all support back navigation
-      if (['category-picker', 'borrow-select', 'new-transaction'].includes(this.currentView)) {
+      // category-picker & borrow-select always support back to new-transaction
+      if (['category-picker', 'borrow-select'].includes(this.currentView)) {
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
         this.goBack();
+      } else if (this.currentView === 'new-transaction') {
+        // new-transaction only supports back when editing
+        const isEditing = !!document.getElementById('tx-id-input')?.value;
+        window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
+        if (isEditing) {
+          this.goBack();
+        }
       } else {
         // All other views (primary tabs) are FIXED — ignore back button
         window.history.replaceState({ view: this.currentView }, '', `#${this.currentView}`);
@@ -377,7 +387,8 @@ class App {
   }
 
   setupSwipeToBack() {
-    // new-transaction, category-picker, borrow-select: all support swipe-to-back.
+    // new-transaction, category-picker, borrow-select: support swipe-to-back.
+    // NOTE: new-transaction ONLY allows swipe when editing an existing transaction.
     const pages = document.querySelectorAll('#view-new-transaction, #view-category-picker, #view-borrow-select');
     if (!pages.length) return;
 
@@ -395,6 +406,16 @@ class App {
         if (e.touches.length !== 1) return;
         // ONLY allow swipe on the currently ACTIVE page
         if (!page.classList.contains('active')) return;
+
+        // Trang Ghi Chép (new-transaction) là trang cố định:
+        // CHỈ cho phép vuốt trở về khi ĐANG SỬA một giao dịch đã có
+        if (page.id === 'view-new-transaction') {
+          const isEditing = !!document.getElementById('tx-id-input')?.value;
+          if (!isEditing) {
+            canSwipe = false;
+            return;
+          }
+        }
 
         const target = e.target;
         // Skip if inside open keypad or category manager

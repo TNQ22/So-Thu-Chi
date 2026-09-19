@@ -1398,9 +1398,12 @@ const UITransactions = {
     const deleteBtn = document.getElementById('tx-delete-btn');
     const submitLabel = document.getElementById('tx-submit-label');
     const headerTitle = document.getElementById('header-page-title');
+    const backBtn = document.getElementById('tx-header-back-btn');
 
     if (isEditing) {
-      // Chế độ Sửa: hiện nút Xóa (cân đối 50-50 với nút Lưu Sửa)
+      // Chế độ Sửa: hiện nút trở về trên header
+      if (backBtn) backBtn.style.display = 'inline-flex';
+      // Hiện nút Xóa (cân đối 50-50 với nút Lưu Sửa)
       if (deleteBtn) {
         deleteBtn.dataset.txId = txId;
         deleteBtn.style.display = 'flex';
@@ -1408,7 +1411,9 @@ const UITransactions = {
       if (submitLabel) submitLabel.textContent = 'Lưu Sửa';
       if (headerTitle) headerTitle.textContent = 'Chỉnh Sửa Ghi Chép';
     } else {
-      // Chế độ Thêm mới: ẩn nút Xóa (nút Lưu Lại chiếm toàn bộ hàng)
+      // Chế độ Thêm mới: trang độc lập/cố định - ẩn nút trở về trên header
+      if (backBtn) backBtn.style.display = 'none';
+      // Ẩn nút Xóa (nút Lưu Lại chiếm toàn bộ hàng)
       if (deleteBtn) {
         deleteBtn.dataset.txId = '';
         deleteBtn.style.display = 'none';
@@ -1585,7 +1590,11 @@ const UITransactions = {
           balance: evaluatedAmount,
           updatedAt: Date.now()
         });
-        this.closeModal();
+        if (id) {
+          this.closeModal();
+        } else {
+          await this.resetForm(type);
+        }
         showToast('Đã điều chỉnh số dư thành công', 'success');
         window.app.refreshAll();
         return;
@@ -1598,6 +1607,9 @@ const UITransactions = {
         showToast('Ví chuyển và ví nhận không thể trùng nhau', 'error');
         return;
       }
+      if (id) {
+        await deleteTransaction(id);
+      }
       await addTransaction({
         type: 'transfer',
         amount: evaluatedAmount,
@@ -1608,7 +1620,11 @@ const UITransactions = {
         time,
         note
       });
-      this.closeModal();
+      if (id) {
+        this.closeModal();
+      } else {
+        await this.resetForm(type);
+      }
       showToast('Đã ghi nhận chuyển tiền', 'success');
       window.app.refreshAll();
       return;
@@ -1623,6 +1639,9 @@ const UITransactions = {
         return;
       }
 
+      if (id) {
+        await deleteTransaction(id);
+      }
       await addDebt({
         type,
         personName,
@@ -1644,7 +1663,11 @@ const UITransactions = {
         updatedAt: Date.now()
       });
 
-      this.closeModal();
+      if (id) {
+        this.closeModal();
+      } else {
+        await this.resetForm(type);
+      }
       showToast(type === 'lend' ? 'Đã ghi nhận khoản cho vay / chi hộ' : 'Đã ghi nhận khoản mượn / đi vay', 'success');
       window.app.refreshAll();
       return;
@@ -1664,7 +1687,11 @@ const UITransactions = {
         isDeleted: 0,
         updatedAt: Date.now()
       });
-      this.closeModal();
+      if (id) {
+        this.closeModal();
+      } else {
+        await this.resetForm(type);
+      }
       showToast('Đã ghi nhận thu nợ thành công', 'success');
       window.app.refreshAll();
       return;
@@ -1684,7 +1711,11 @@ const UITransactions = {
         isDeleted: 0,
         updatedAt: Date.now()
       });
-      this.closeModal();
+      if (id) {
+        this.closeModal();
+      } else {
+        await this.resetForm(type);
+      }
       showToast('Đã ghi nhận trả nợ thành công', 'success');
       window.app.refreshAll();
       return;
