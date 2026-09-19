@@ -102,10 +102,15 @@ const UITransactions = {
     });
 
     // Transaction form submit
+    // LƯU Ý: Chỉ dùng addEventListener, KHÔNG dùng onsubmit attribute trên form
+    // để tránh ghi 2 lần khi bấm nút submit
     const txForm = document.getElementById('transaction-form');
     if (txForm) {
+      // Xóa onsubmit attribute nếu có (được set trong HTML)
+      txForm.removeAttribute('onsubmit');
       txForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        e.stopImmediatePropagation();
         await this.handleFormSubmit();
       });
     }
@@ -1318,9 +1323,10 @@ const UITransactions = {
   },
 
   submitForm() {
-    const hiddenBtn = document.getElementById('btn-submit-tx');
-    if (hiddenBtn) {
-      hiddenBtn.click();
+    // Trigger form submit event thay vì gọi trực tiếp để tránh ghi 2 lần
+    const form = document.getElementById('transaction-form');
+    if (form) {
+      form.dispatchEvent(new Event('submit', { bubbles: false, cancelable: true }));
     } else {
       this.handleFormSubmit();
     }
@@ -1588,25 +1594,40 @@ const UITransactions = {
 
     // 5. Normal Expense / Income
     if (id) {
+      // Sửa giao dịch: xóa cũ (rollback số dư) rồi thêm mới (cập nhật số dư đúng)
       await deleteTransaction(id);
+      await addTransaction({
+        type,
+        amount: evaluatedAmount,
+        fee,
+        accountId,
+        categoryId: categoryId || null,
+        date,
+        time,
+        note,
+        isBorrowed,
+        borrowPerson,
+        borrowDueDate
+      });
+      this.closeModal();
+      showToast('Đã cập nhật ghi chép', 'success');
+    } else {
+      await addTransaction({
+        type,
+        amount: evaluatedAmount,
+        fee,
+        accountId,
+        categoryId: categoryId || null,
+        date,
+        time,
+        note,
+        isBorrowed,
+        borrowPerson,
+        borrowDueDate
+      });
+      this.closeModal();
+      showToast('Đã thêm ghi chép mới', 'success');
     }
-
-    await addTransaction({
-      type,
-      amount: evaluatedAmount,
-      fee,
-      accountId,
-      categoryId: categoryId || null,
-      date,
-      time,
-      note,
-      isBorrowed,
-      borrowPerson,
-      borrowDueDate
-    });
-
-    this.closeModal();
-    showToast(id ? 'Đã cập nhật ghi chép' : 'Đã thêm ghi chép mới', 'success');
     window.app.refreshAll();
   },
 
@@ -1690,7 +1711,9 @@ const UITransactions = {
         const fromAcc = accMap.get(t.accountId);
         const toAcc = accMap.get(t.toAccountId);
 
-        let title = t.note || (cat ? cat.name : 'Giao dịch');
+        // Tiêu đề: ưu tiên ghi chú, fallback về tên danh mục
+        const hasNote = t.note && t.note.trim();
+        let title = hasNote ? t.note : (cat ? cat.name : 'Giao dịch');
         let iconName = 'arrow-right-left';
         let iconBg = 'var(--transfer-bg)';
         let iconColor = 'var(--transfer)';
@@ -1713,9 +1736,12 @@ const UITransactions = {
 
         const timeDisplay = t.time ? `<span style="color: var(--primary); font-weight: 600;">${t.time}</span> • ` : '';
         const feeDisplay = t.fee ? ` • <span style="color: var(--text-muted);">Phí: ${new Intl.NumberFormat('vi-VN').format(t.fee)}đ</span>` : '';
+        // Chỉ hiển thị tên danh mục trong meta nếu title KHÔNG phải note (tức là title đang là cat.name)
+        // Tránh trùng lặp: nếu note đã có thì meta chỉ hiển thị ví và danh mục phụ
+        const catMeta = (hasNote && cat) ? ` • <span style="color: var(--text-muted); font-size: 0.75rem;">${escapeHTML(cat.name)}</span>` : '';
         const accountDisplay = t.type === 'transfer' 
           ? `${timeDisplay}${fromAcc ? fromAcc.name : 'Ví'} ➔ ${toAcc ? toAcc.name : 'Ví'}${feeDisplay}`
-          : `${timeDisplay}${fromAcc ? fromAcc.name : 'Ví'}${cat ? ` • ${cat.name}` : ''}${feeDisplay}`;
+          : `${timeDisplay}${fromAcc ? fromAcc.name : 'Ví'}${catMeta}${feeDisplay}`;
 
         html += `
           <div class="tx-card" onclick="UITransactions.openEditModal(${t.id})">
@@ -1728,10 +1754,22 @@ const UITransactions = {
                 <span class="tx-meta">${accountDisplay}</span>
               </div>
             </div>
-            <div class="tx-right">
+            <div class="tx-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
               <span class="tx-amount ${amountClass}">
                 ${amountPrefix}${new Intl.NumberFormat('vi-VN').format(t.amount)}đ
               </span>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="tx-action-btn" title="Sửa"
+                  onclick="event.stopPropagation(); UITransactions.openEditModal(${t.id})"
+                  style="background: rgba(99,102,241,0.12); color: #818cf8; border: none; border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                  <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
+                </button>
+                <button type="button" class="tx-action-btn" title="Xóa"
+                  onclick="event.stopPropagation(); UITransactions.confirmDeleteTransaction(${t.id})"
+                  style="background: rgba(244,63,94,0.12); color: #fb7185; border: none; border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                  <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1751,6 +1789,10 @@ const UITransactions = {
     const tx = await db.transactions.get(Number(txId));
     if (!tx || tx.isDeleted) return;
 
+    // Reset form trước để tránh dữ liệu cũ
+    const form = document.getElementById('transaction-form');
+    if (form) form.reset();
+
     document.getElementById('tx-id-input').value = tx.id;
     const formattedAmount = new Intl.NumberFormat('vi-VN').format(tx.amount);
     document.getElementById('tx-amount-input').value = formattedAmount;
@@ -1763,18 +1805,32 @@ const UITransactions = {
     const nativeDt = document.getElementById('tx-datetime-native');
     if (nativeDt) nativeDt.value = `${tx.date}T${tx.time || '00:00'}`;
 
-    const dtDisplay = document.getElementById('tx-datetime-display');
-    if (dtDisplay) dtDisplay.textContent = this.formatDateTimeDisplay(tx.date, tx.time);
+    this.updateDateTimeDisplays(tx.date, tx.time || '00:00');
 
     const typeSelector = document.getElementById('tx-type-selector');
     if (typeSelector) typeSelector.value = tx.type;
     this.updateAmountColor(tx.type);
+    this.updateHeaderTypeDisplay(tx.type);
 
     document.getElementById('tx-note-input').value = tx.note || '';
 
     // Fee
     const feeInput = document.getElementById('tx-fee-input');
-    if (feeInput) feeInput.value = tx.fee ? new Intl.NumberFormat('vi-VN').format(tx.fee) : '';
+    const feeDisplay = document.getElementById('tx-fee-display');
+    if (feeInput) feeInput.value = tx.fee ? new Intl.NumberFormat('vi-VN').format(tx.fee) : '0';
+    if (feeDisplay) feeDisplay.textContent = tx.fee ? new Intl.NumberFormat('vi-VN').format(tx.fee) : '0';
+
+    // Reset extra details
+    const extraBody = document.getElementById('extra-details-body');
+    if (extraBody) extraBody.style.display = 'none';
+    const extraChevron = document.getElementById('extra-details-chevron');
+    if (extraChevron) extraChevron.style.transform = 'rotate(0deg)';
+
+    // Reset debt person rows
+    const personRow = document.getElementById('tx-debt-person-row');
+    if (personRow) personRow.style.display = 'none';
+    const dueRow = document.getElementById('tx-debt-due-row');
+    if (dueRow) dueRow.style.display = 'none';
 
     await this.populateAccounts(tx.accountId, tx.toAccountId);
     await this.updateSelectedAccountDisplay();
@@ -1786,12 +1842,28 @@ const UITransactions = {
       if (cat) this.selectCategory(cat);
     }
 
+    // Render quick categories với trạng thái đã chọn
+    await this.renderQuickCategories();
+
     if (window.app) {
       window.app.switchView('new-transaction');
       const titleEl = document.getElementById('header-page-title');
       if (titleEl) titleEl.textContent = 'Chỉnh Sửa Ghi Chép';
     }
     if (window.lucide) lucide.createIcons();
+  },
+
+  /* ==================== DELETE TRANSACTION ==================== */
+  async confirmDeleteTransaction(txId) {
+    if (!confirm('Bạn có chắc muốn xóa giao dịch này không?\nSố dư ví sẽ được hoàn lại.')) return;
+    try {
+      await deleteTransaction(txId);
+      showToast('Đã xóa giao dịch', 'info');
+      window.app.refreshAll();
+    } catch (err) {
+      console.error('Delete transaction error:', err);
+      showToast('Lỗi khi xóa giao dịch', 'error');
+    }
   }
 };
 
